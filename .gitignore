@@ -4,3 +4,6 @@ data/MNIST/
 data/mnist_c/
 data/*.npy
 data/*.gz
+
+__pycache__/
+*.pyc
