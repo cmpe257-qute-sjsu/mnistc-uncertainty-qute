@@ -1,0 +1,6 @@
+
+# Downloaded datasets - code lives in data/, downloads do not
+data/MNIST/
+data/mnist_c/
+data/*.npy
+data/*.gz

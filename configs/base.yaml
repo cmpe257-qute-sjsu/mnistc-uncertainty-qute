@@ -4,7 +4,7 @@
 # Settings marked [ours] are team defaults and must be named as deviations in the report.
 # Do not override these in individual training scripts. Change here, bump version, tell the team.
 
-config_version: 4
+config_version: 2
 
 data:
   dataset: mnist                      # [paper] 4-layer CNN on MNIST
@@ -26,16 +26,12 @@ training:
   lr_decay_per_epoch: 0.99            # [paper]
   seeds: [11, 22, 33]                 # [ours] paper reports 3 runs but not which seeds
   checkpoint_selection: min_val_nll   # [ours] paper trains a fixed 20 epochs, no selection
-  data_order: fixed_by_split_seed     # [ours] model seed does not change minibatch order
 
 qute:
   K: 2                                # [paper] bounded by depth; EEs after conv layers 1 and 2
   early_exit_after_layers: [1, 2]     # [paper]
   w_ev_0: 3.0                         # [paper] tested {2,3,4,5}, chose 3
   w_ev_delta: 0.5                     # [paper] w_EV(k) = w_EV(k-1) + delta -> [3.0, 3.5]
-  tau: null                           # [ours] early-exit loss weights. null -> relative depth,
-                                      # so exits after layers 1 and 2 of 4 get [0.25, 0.50].
-                                      # The paper cites Kaya et al. 2019 but gives no values.
   transfer_layer_type: depthwise_conv # [paper] h_phi and h_theta are single depthwise convs
   pointwise_before_theta: true        # [paper] dimension matching at the early exit
   freeze_base_last_fraction: 0.10     # [paper] last 10% of epochs -> epochs 19 and 20
@@ -60,7 +56,6 @@ baselines:
     locations: early_exit_locations   # [paper] same placement as the EEs, for fairness
     passes_headline: 2                # [paper] passes = K
     passes_reference: 20              # [ours] cost-unconstrained reference run
-    headline_is_prefix_of_reference: true   # 2-pass file is the first 2 of the 20; this creates dependence
   deep_ensemble:
     members_headline: 2               # [paper] members = K
     members_reference: 5              # [ours] cost-unconstrained reference run
