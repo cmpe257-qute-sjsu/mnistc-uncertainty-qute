@@ -50,6 +50,8 @@ def _check_protocol(protocol: dict) -> None:
         "checkpoint_selection",
         "data_order",
     )
+    if "num_workers" not in training:
+        raise ValueError("training block is missing num_workers")
     missing = [key for key in required if key not in training]
     if missing:
         raise ValueError(f"training block is missing {missing}")
@@ -145,6 +147,36 @@ def fix_data_order(loader: DataLoader, protocol: dict) -> None:
             "seed and ensemble member sees the same data order."
         )
     sampler.generator.manual_seed(int(protocol["data"]["split_seed"]))
+
+
+def pin_training_randomness(protocol: dict) -> None:
+    """Reseed global RNGs for training-time augmentation after model init.
+
+    build_cnn_model seeds from the model seed. Minibatch order is reset by
+    fix_data_order. Augmentation (RandomCrop, RandomRotation, etc.) still
+    draws from the global torch RNG unless we reseed it from data.split_seed,
+    so every run seed and ensemble member sees the same augmented batches.
+    """
+    split_seed = int(protocol["data"]["split_seed"])
+    random.seed(split_seed)
+    np.random.seed(split_seed)
+    torch.manual_seed(split_seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(split_seed)
+
+
+def worker_init_fn(protocol: dict):
+    """Pass to DataLoader(..., worker_init_fn=worker_init_fn(protocol)) when num_workers > 0."""
+
+    split_seed = int(protocol["data"]["split_seed"])
+
+    def init(worker_id: int) -> None:
+        seed = split_seed + worker_id
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+    return init
 
 
 def set_seed(seed: int) -> None:
@@ -308,9 +340,9 @@ def fit_cnn(
     training = protocol["training"]
     torch_device = torch.device(device)
     model = build_cnn_model(protocol, seed, dropout_rate).to(torch_device)
-    # build_model reseeds the global RNG. Restart shuffle after that, from split_seed.
     fix_data_order(train_loader, protocol)
     fix_data_order(validation_loader, protocol)
+    pin_training_randomness(protocol)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(
         model.parameters(),

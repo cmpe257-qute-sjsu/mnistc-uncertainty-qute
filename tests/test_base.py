@@ -11,7 +11,9 @@ data.validation_loader, and data.test_loader.
 import copy
 import sys
 import tempfile
+import types
 from pathlib import Path
+from unittest import mock
 
 import torch
 import torch.nn as nn
@@ -27,6 +29,7 @@ from baselines.base import (
     fix_data_order,
     load_checkpoint,
     load_protocol,
+    pin_training_randomness,
     require_loaders,
     train_base,
 )
@@ -76,19 +79,34 @@ def t_protocol():
     assert training["seeds"] == [11, 22, 33]
     assert training["checkpoint_selection"] == "min_val_nll"
     assert training["data_order"] == "fixed_by_split_seed"
-    assert protocol["config_version"] == 3
+    assert training["num_workers"] == 0
+    assert protocol["config_version"] == 4
     assert protocol["model"]["parameters"] == 15466
 check("base.yaml still has the frozen BASE settings", t_protocol)
 
 def t_missing_loaders():
-    try:
-        require_loaders(load_protocol())
-    except SystemExit as exc:
-        message = str(exc)
-        assert "data.get_loaders(protocol)" in message, message
-        return
-    raise AssertionError("require_loaders found a factory that is not supposed to exist yet")
+    protocol = load_protocol()
+    fake = types.ModuleType("data")
+    with mock.patch.dict(sys.modules, {"data": fake}):
+        try:
+            require_loaders(protocol)
+        except SystemExit as exc:
+            message = str(exc)
+            assert "data.get_loaders(protocol)" in message, message
+            return
+    raise AssertionError("require_loaders should exit when get_loaders is missing")
 check("missing data.get_loaders is reported by name", t_missing_loaders)
+
+def t_augmentation_rng():
+    protocol = load_protocol()
+    build_base_model(protocol, 11)
+    pin_training_randomness(protocol)
+    first = torch.rand(4)
+    build_base_model(protocol, 22)
+    pin_training_randomness(protocol)
+    second = torch.rand(4)
+    assert torch.equal(first, second)
+check("augmentation RNG is pinned to split_seed after model init", t_augmentation_rng)
 
 def t_data_order():
     protocol = load_protocol()

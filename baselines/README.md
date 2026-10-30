@@ -31,11 +31,13 @@ Reported runs call Abirami's factory. Nothing is built at import time:
 train_loader, validation_loader, test_loader = data.get_loaders(protocol)
 ```
 
-`get_loaders` reads `training.batch_size` from the protocol. A shuffled loader
-must use `generator=torch.Generator().manual_seed(split_seed)`. This trainer
-restarts that generator from `data.split_seed` after the model seed is set, so
-every seed and every ensemble member sees the same minibatch order. Ensemble
-diversity is initialization only.
+`get_loaders` reads `training.batch_size` and `training.num_workers` from the
+protocol. A shuffled loader must use
+`generator=torch.Generator().manual_seed(split_seed)`. After model init,
+`fit_cnn` calls `pin_training_randomness` so train-time augmentation also
+follows `split_seed`. If `num_workers > 0`, pass
+`worker_init_fn=baselines.base.worker_init_fn(protocol)` to each DataLoader.
+Ensemble diversity is initialization only.
 
 `python -m baselines.base` stops if `data.get_loaders` is missing. This folder
 does not build the 50,000 / 10,000 split.

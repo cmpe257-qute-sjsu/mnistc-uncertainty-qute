@@ -30,6 +30,7 @@ earlier runs are still comparable.
 | 2026-10-17 | 1 | Initial protocol | Frozen at Step 2 | - |
 | 2026-10-19 | 2 | Added `model:` block - channels, kernel, pooling, head | Step 7 shared CNN needed a recorded architecture | None, no training has run |
 | 2026-10-22 | 3 | `training.data_order: fixed_by_split_seed`. MC Dropout `headline_is_prefix_of_reference: true` | Record that model seed does not change minibatch order, and that the 2-pass file is the first 2 of the 20 | None, no reported training has run |
+| 2026-10-30 | 4 | `training.num_workers: 0`. `fit_cnn` calls `pin_training_randomness` after model init | Keep augmentation tied to `split_seed`, not model seed; document worker init when num_workers > 0 | None, no reported training has run |
 
 ## Decisions we made that the paper does not specify
 
@@ -41,3 +42,5 @@ earlier runs are still comparable.
 | 2026-10-19 | Channel widths [8, 16, 32, 32] | Paper says "4-layer CNN" but gives no widths | Yes, as a deviation |
 | 2026-10-22 | Minibatch order is fixed by split seed 0 for every model seed and ensemble member. Ensemble diversity is initialization only | A shared global RNG would also change data order when the model seed changes, which confounds the QUTE comparison | Yes |
 | 2026-10-22 | Deep-ensemble member k of run R is initialized with R * 100 + k (run 11 uses 1101–1105) | The protocol names 3 run seeds and 5 members, and does not list 5 initialization seeds | Yes |
+| 2026-10-30 | Adam: `training.momentum` is beta1; beta2 is fixed at 0.999 | Paper lists momentum for Adam without naming betas | Yes, as a deviation |
+| 2026-10-30 | After model init, global RNG is reseeded from `data.split_seed` so train-time augmentation matches across run seeds and ensemble members | `set_seed(model_seed)` would otherwise make RandomCrop/RandomRotation differ per seed | Yes |

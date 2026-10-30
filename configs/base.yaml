@@ -4,7 +4,7 @@
 # Settings marked [ours] are team defaults and must be named as deviations in the report.
 # Do not override these in individual training scripts. Change here, bump version, tell the team.
 
-config_version: 3
+config_version: 4
 
 data:
   dataset: mnist                      # [paper] 4-layer CNN on MNIST
@@ -27,6 +27,7 @@ training:
   seeds: [11, 22, 33]                 # [ours] paper reports 3 runs but not which seeds
   checkpoint_selection: min_val_nll   # [ours] paper trains a fixed 20 epochs, no selection
   data_order: fixed_by_split_seed     # [ours] model seed does not change minibatch order
+  num_workers: 0                      # [ours] fit_cnn reseeds aug RNG from split_seed; if >0, use baselines.base.worker_init_fn
 
 qute:
   K: 2                                # [paper] bounded by depth; EEs after conv layers 1 and 2
