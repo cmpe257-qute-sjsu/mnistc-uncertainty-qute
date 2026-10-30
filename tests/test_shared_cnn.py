@@ -194,6 +194,6 @@ if FAIL:
     for name, err in FAIL:
         print(f"  {name}: {err}")
     sys.exit(1)
-print("\nStep 7 interface checks pass. Anusha can build baselines on this.")
+print("\nStep 7 interface checks pass. ")
 print("Still to confirm: clean accuracy after real training (expect a gap vs")
 print("the paper's ~91% if our channel widths are larger).")
