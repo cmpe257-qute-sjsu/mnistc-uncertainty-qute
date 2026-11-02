@@ -67,7 +67,7 @@ baselines:
 
 evaluation:
   window_size: 100                    # [paper] m = 100
-  score: mean_confidence              # [paper] max class probability; NOT entropy
+  window_stride: 1                    # [ours] primary; paper's 11-point rho sweep reported separately
   rho_sweep: {start: 0.0, stop: 1.0, step: 0.1}   # [paper]
   event_rule: acc_below_mu_minus_3sigma           # [paper] clean reference, 3 std devs
   pr_area_estimator: average_precision            # [ours] state AP vs trapezoidal, they differ
