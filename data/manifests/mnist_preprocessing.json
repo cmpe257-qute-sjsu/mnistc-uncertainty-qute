@@ -1,5 +1,5 @@
 {
-  "config_version": 2,
+  "config_version": 4,
   "dataset": "MNIST",
   "split_seed": 0,
   "train_size": 50000,

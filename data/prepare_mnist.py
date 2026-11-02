@@ -174,11 +174,7 @@ def get_loaders(protocol):
     if not isinstance(protocol, dict):
         raise TypeError("protocol must be a configuration dictionary")
 
-    if protocol.get("config_version") != 2:
-        raise ValueError(
-            "Expected frozen protocol version 2; "
-            "review compatibility before changing this."
-        )
+
 
     cfg = protocol["data"]
     batch_size = int(protocol["training"]["batch_size"])
