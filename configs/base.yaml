@@ -4,7 +4,7 @@
 # Settings marked [ours] are team defaults and must be named as deviations in the report.
 # Do not override these in individual training scripts. Change here, bump version, tell the team.
 
-config_version: 4
+config_version: 5
 
 data:
   dataset: mnist                      # [paper] 4-layer CNN on MNIST
@@ -34,6 +34,7 @@ qute:
   early_exit_after_layers: [1, 2]     # [paper]
   w_ev_0: 3.0                         # [paper] tested {2,3,4,5}, chose 3
   w_ev_delta: 0.5                     # [paper] w_EV(k) = w_EV(k-1) + delta -> [3.0, 3.5]
+  tau: [0.25, 0.5]                    # [ours] early-exit loss weights; paper cites Kaya et al. 2019, no values  
   transfer_layer_type: depthwise_conv # [paper] h_phi and h_theta are single depthwise convs
   pointwise_before_theta: true        # [paper] dimension matching at the early exit
   freeze_base_last_fraction: 0.10     # [paper] last 10% of epochs -> epochs 19 and 20

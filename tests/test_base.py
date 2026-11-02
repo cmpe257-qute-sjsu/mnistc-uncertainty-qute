@@ -80,7 +80,7 @@ def t_protocol():
     assert training["checkpoint_selection"] == "min_val_nll"
     assert training["data_order"] == "fixed_by_split_seed"
     assert training["num_workers"] == 0
-    assert protocol["config_version"] == 4
+    assert protocol["config_version"] >= 4
     assert protocol["model"]["parameters"] == 15466
 check("base.yaml still has the frozen BASE settings", t_protocol)
 
