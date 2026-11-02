@@ -74,3 +74,39 @@ def test_stream_order(sample_corruption):
     assert stream[9999][2] == 9999
     assert stream[10000][2] == 0
     assert stream[19999][2] == 9999
+def test_condition_loader_contract(monkeypatch):
+    from data import prepare_mnistc
+
+    class FakeDataset(Dataset):
+        def __len__(self):
+            return 10000
+
+        def __getitem__(self, index):
+            return torch.zeros(1, 28, 28), 0, index
+
+    conditions = {
+        "clean": FakeDataset(),
+        **{
+            name: FakeDataset()
+            for name in prepare_mnistc.CORRUPTIONS
+        },
+    }
+
+    monkeypatch.setattr(
+        prepare_mnistc,
+        "build_streams",
+        lambda protocol: (conditions, {})
+    )
+
+    loaders, manifest = (
+        prepare_mnistc.get_corruption_loaders(
+            {"training": {"batch_size": 256}}
+        )
+    )
+
+    assert len(loaders) == 16
+    assert set(loaders) == set(conditions)
+
+    for loader in loaders.values():
+        assert len(loader.dataset) == 10000
+        assert len(next(iter(loader))) == 3

@@ -129,7 +129,7 @@ class CorruptedMNIST(Dataset):
         ).reshape(28, 28)
 
         # ToTensor converts uint8 [0,255] into [0,1].
-        image = Image.fromarray(image, mode="L")
+        image = Image.fromarray(image)
         image = self.transform(image)
 
         label = int(self.labels[index])
@@ -181,10 +181,10 @@ def find_dataset_root():
     )
 
 
+
 def build_streams(protocol):
-    expected = int(
-        protocol["data"]["corruptions_expected"]
-    )
+    """Prepare clean + 15 corruption datasets separately."""
+    expected = int(protocol["data"]["corruptions_expected"])
 
     if expected != len(CORRUPTIONS):
         raise ValueError("Corruption count mismatch")
@@ -205,9 +205,6 @@ def build_streams(protocol):
         and (directory / "test_images.npy").exists()
     }
 
-    if "identity" not in available:
-        print("Note: identity folder not found.")
-
     selected = set(CORRUPTIONS)
 
     if not selected.issubset(available):
@@ -222,35 +219,29 @@ def build_streams(protocol):
             f"Unexpected corruption folders: {sorted(extra)}"
         )
 
+    # Each condition is predicted exactly once.
+    conditions = {"clean": clean}
+
     manifest = {
         "config_version": protocol["config_version"],
         "dataset": "MNIST-C",
         "split_fingerprint": "aaed0a23690e2e3c",
-        "normalization": {
-            "mean": mean,
-            "std": std,
-        },
-        "clean_count": 10000,
+        "normalization": {"mean": mean, "std": std},
+        "condition_count": 16,
         "corruption_count": len(CORRUPTIONS),
         "identity_excluded": True,
-        "stream_order": "clean_then_corrupted",
-        "sample_id_policy": (
-            "IDs 0..9999 within each segment; "
-            "segment identifies clean or corruption"
-        ),
-        "streams": {},
+        "prediction_order": "original_dataset_order",
+        "evaluation_stream_order": "clean_then_corrupted",
+        "conditions": {
+            "clean": {"samples": 10000}
+        },
     }
-
-    streams = {}
 
     for name in CORRUPTIONS:
         print("Checking:", name)
-
         folder = root / name
 
-        corrupted = CorruptedMNIST(
-            folder, mean, std
-        )
+        corrupted = CorruptedMNIST(folder, mean, std)
 
         if not np.array_equal(
             corrupted.labels, clean_labels
@@ -259,37 +250,19 @@ def build_streams(protocol):
                 f"Label ordering mismatch: {name}"
             )
 
-        # Clean first, corruption second.
-        # No shuffle or random interleaving.
-        stream = ConcatDataset([clean, corrupted])
+        conditions[name] = corrupted
 
-        assert len(stream) == 20000
-
-        streams[name] = stream
-
-        manifest["streams"][name] = {
-            "total_samples": 20000,
-            "segments": [
-                {
-                    "source": "mnist_test",
-                    "start": 0,
-                    "stop_exclusive": 10000,
-                },
-                {
-                    "source": name,
-                    "start": 10000,
-                    "stop_exclusive": 20000,
-                },
-            ],
-            "corruption_images_sha256": sha256_file(
+        manifest["conditions"][name] = {
+            "samples": 10000,
+            "images_sha256": sha256_file(
                 folder / "test_images.npy"
             ),
-            "corruption_labels_sha256": sha256_file(
+            "labels_sha256": sha256_file(
                 folder / "test_labels.npy"
             ),
         }
 
-    return streams, manifest
+    return conditions, manifest
 
 
 def save_manifest(manifest):
@@ -305,13 +278,12 @@ def save_manifest(manifest):
     print("Saved:", path)
 
 
-def get_corruption_loaders(protocol):
-    """Return deterministic evaluation DataLoaders by corruption."""
-    streams, manifest = build_streams(protocol)
 
-    batch_size = int(
-        protocol["training"]["batch_size"]
-    )
+def get_corruption_loaders(protocol):
+    """Return 16 condition-specific evaluation DataLoaders."""
+    conditions, manifest = build_streams(protocol)
+
+    batch_size = int(protocol["training"]["batch_size"])
 
     loaders = {
         name: DataLoader(
@@ -320,10 +292,11 @@ def get_corruption_loaders(protocol):
             shuffle=False,
             num_workers=0,
         )
-        for name, dataset in streams.items()
+        for name, dataset in conditions.items()
     }
 
     return loaders, manifest
+
 
 
 def main():
@@ -332,13 +305,14 @@ def main():
 
     save_manifest(manifest)
 
-    print("\nMNIST-C verification results")
-    print("Corruptions:", len(loaders))
+    print("\nMNIST-C condition verification results")
+    print("Conditions:", len(loaders))
+    assert len(loaders) == 16
 
     for name, loader in loaders.items():
         print(name, len(loader.dataset))
 
-        assert len(loader.dataset) == 20000
+        assert len(loader.dataset) == 10000
 
     # Verify one batch without model inference.
     first_name = CORRUPTIONS[0]
