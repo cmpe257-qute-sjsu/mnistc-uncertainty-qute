@@ -41,6 +41,7 @@ from baselines.base import (
     assert_train_batch_size,
     fix_data_order,
     load_protocol,
+    pin_training_randomness,
     require_loaders,
     set_seed,
     unpack_batch,
@@ -163,6 +164,8 @@ def train_qute(
     # different minibatch order than BASE and the comparison would be confounded.
     fix_data_order(train_loader, protocol)
     fix_data_order(validation_loader, protocol)
+    # Reseed the global RNG from split_seed so augmentation matches the baselines.
+    pin_training_randomness(protocol)
 
     optimizer = torch.optim.Adam(
         model.parameters(),
