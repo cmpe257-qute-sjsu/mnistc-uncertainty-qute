@@ -45,7 +45,7 @@ earlier runs are still comparable.
 | 2026-10-22 | Deep-ensemble member k of run R is initialized with R * 100 + k (run 11 uses 1101–1105) | The protocol names 3 run seeds and 5 members, and does not list 5 initialization seeds | Yes |
 | 2026-10-30 | Adam: `training.momentum` is beta1; beta2 is fixed at 0.999 | Paper lists momentum for Adam without naming betas | Yes, as a deviation |
 | 2026-10-30 | After model init, global RNG is reseeded from `data.split_seed` so train-time augmentation matches across run seeds and ensemble members | `set_seed(model_seed)` would otherwise make RandomCrop/RandomRotation differ per seed | Yes |
-| 2026-11-02 | Early-exit loss weights tau = relative depth of each exit, [0.25, 0.5] for K=2 (`qute.tau: null`) | Paper specifies w_EV (3.0, 3.5) but only cites Kaya et al. 2019 for tau, with no values | Yes, as a deviation |
+| 2026-11-02 | Early-exit loss weights tau = [0.25, 0.5] (relative depth of each exit) | Paper specifies w_EV (3.0, 3.5) but only cites Kaya et al. 2019 for tau, with no values | Yes, as a deviation |
 | 2026-11-02 | Models predict each condition once (clean + 15 corruptions = 16 files per model per seed). Streams are built in eval from saved predictions | Avoids re-predicting clean 15×, keeps sample IDs unique per file, keeps MC Dropout clean predictions consistent | Yes |
 | 2026-11-02 | Stream = clean MNIST test then one corruption. Window 100, stride 1 | Section 5 / Appendix A.3–A.4; stride is not stated in the paper | Yes, stride as a deviation |
 | 2026-11-02 | Degradation event = window accuracy strictly below μ_ID − 3σ_ID, with μ and σ from that model's clean-only window accuracies. Alarm = mean window confidence < ρ | Matches the paper and "below" in the config | Yes |

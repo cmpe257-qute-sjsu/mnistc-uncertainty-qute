@@ -67,10 +67,10 @@ baselines:
 
 evaluation:
   window_size: 100                    # [paper] m = 100
-  window_stride: 1                    # [ours] primary; paper's 11-point rho sweep reported separately
+  window_stride: 1                    # [ours] paper does not state the stride; moving average over past 100
   rho_sweep: {start: 0.0, stop: 1.0, step: 0.1}   # [paper]
   event_rule: acc_below_mu_minus_3sigma           # [paper] clean reference, 3 std devs
-  pr_area_estimator: average_precision            # [ours] state AP vs trapezoidal, they differ
+  pr_area_estimator: average_precision            # [ours] primary; paper's 11-point rho sweep reported separately
   undefined_auprc_policy: mark_undefined          # never substitute 0 or 1
   ece_bins: 15                        # [ours]
   ece_binning: equal_mass             # [ours] DEVIATION: paper uses equal-width bins
