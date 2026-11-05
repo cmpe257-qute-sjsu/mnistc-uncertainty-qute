@@ -1,0 +1,15 @@
+{
+  "config_version": 4,
+  "dataset": "MNIST",
+  "split_seed": 0,
+  "train_size": 50000,
+  "val_size": 10000,
+  "split_fingerprint": "aaed0a23690e2e3c",
+  "train_mean": 0.13073109090328217,
+  "train_std": 0.30822139978408813,
+  "batch_size": 256,
+  "augmentation": {
+    "random_rotation_degrees": 10,
+    "random_crop_padding": 2
+  }
+}
