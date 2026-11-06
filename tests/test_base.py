@@ -186,6 +186,39 @@ def t_train_and_checkpoint():
         model.load_state_dict(saved["model_state_dict"])
 check("two epochs decay the learning rate and keep the best validation NLL", t_train_and_checkpoint)
 
+def t_final_epoch_checkpoint():
+    protocol = short_protocol()
+    protocol["training"]["checkpoint_selection"] = "final_epoch"
+    with tempfile.TemporaryDirectory() as directory:
+        model, history = train_base(
+            fake_loader(),
+            fake_loader(),
+            seed=11,
+            protocol=protocol,
+            checkpoint_dir=directory,
+        )
+        assert [row["epoch"] for row in history] == [1, 2]
+        assert all("val_nll" in row for row in history)
+        saved = load_checkpoint(checkpoint_path(directory, protocol["config_version"], 11))
+        assert saved["checkpoint_selection"] == "final_epoch"
+        assert saved["epoch"] == 2
+        assert abs(saved["val_nll"] - history[-1]["val_nll"]) < 1e-8
+        for key, value in model.state_dict().items():
+            assert torch.equal(saved["model_state_dict"][key], value.cpu()), key
+check("final_epoch keeps the last epoch's weights and still logs validation NLL", t_final_epoch_checkpoint)
+
+def t_unknown_checkpoint_rule():
+    protocol = short_protocol()
+    protocol["training"]["checkpoint_selection"] = "best_accuracy"
+    with tempfile.TemporaryDirectory() as directory:
+        try:
+            train_base(fake_loader(), fake_loader(), seed=11, protocol=protocol, checkpoint_dir=directory)
+        except ValueError as exc:
+            assert "checkpoint_selection" in str(exc), exc
+            return
+    raise AssertionError("an unknown checkpoint_selection was accepted")
+check("an unknown checkpoint_selection is rejected", t_unknown_checkpoint_rule)
+
 def t_no_overwrite():
     protocol = short_protocol()
     with tempfile.TemporaryDirectory() as directory:

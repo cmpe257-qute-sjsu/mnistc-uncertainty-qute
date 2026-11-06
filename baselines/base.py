@@ -22,6 +22,12 @@ from models import CNNConfig, build_model, predict_proba, save_predictions
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROTOCOL = ROOT / "configs" / "base.yaml"
 
+# training.checkpoint_selection values fit_cnn implements.
+#   min_val_nll: keep the epoch with the lowest validation NLL
+#   final_epoch: keep the last epoch's weights, as the paper does (fixed 20 epochs)
+# Validation NLL is computed and logged every epoch under both rules.
+CHECKPOINT_RULES = ("min_val_nll", "final_epoch")
+
 
 def load_protocol(path: Optional[Path] = None) -> dict:
     """Read configs/base.yaml. Training code must not override these values."""
@@ -59,10 +65,10 @@ def _check_protocol(protocol: dict) -> None:
         raise ValueError(
             f"training.optimizer is {training['optimizer']!r}; BASE implements adam from configs/base.yaml"
         )
-    if training["checkpoint_selection"] != "min_val_nll":
+    if training["checkpoint_selection"] not in CHECKPOINT_RULES:
         raise ValueError(
             "training.checkpoint_selection is "
-            f"{training['checkpoint_selection']!r}; BASE keeps the minimum validation NLL checkpoint"
+            f"{training['checkpoint_selection']!r}; this trainer implements {list(CHECKPOINT_RULES)}"
         )
     if training["data_order"] != "fixed_by_split_seed":
         raise ValueError(
@@ -330,9 +336,11 @@ def fit_cnn(
     verbose: bool = False,
     extra: Optional[dict] = None,
 ) -> Tuple[nn.Module, List[dict]]:
-    """Train one SharedCNN and save the minimum-validation-NLL checkpoint.
+    """Train one SharedCNN and save the checkpoint picked by training.checkpoint_selection.
 
-    Validation runs in eval mode, so dropout is off while the checkpoint is chosen.
+    min_val_nll keeps the epoch with the lowest validation NLL. final_epoch keeps the
+    last epoch's weights. Validation NLL is logged in history every epoch either way.
+    Validation runs in eval mode, so dropout is off while it is measured.
     MC Dropout turns dropout back on only at prediction time.
     """
     _check_protocol(protocol)
@@ -357,6 +365,7 @@ def fit_cnn(
     _refuse_existing(path, overwrite)
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    rule = training["checkpoint_selection"]
     best_nll = float("inf")
     best_state = None
     best_epoch = None
@@ -378,11 +387,16 @@ def fit_cnn(
                 f"{method} seed {seed} epoch {epoch}/{training['epochs']} "
                 f"train_nll={train_nll:.4f} val_nll={val_nll:.4f} lr={current_lr:.6f}"
             )
-        if val_nll < best_nll:
+        if rule == "min_val_nll" and val_nll < best_nll:
             best_nll = val_nll
             best_epoch = epoch
             best_state = _clone_state(model)
         scheduler.step()
+
+    if rule == "final_epoch":
+        best_nll = history[-1]["val_nll"]
+        best_epoch = history[-1]["epoch"]
+        best_state = _clone_state(model)
 
     model.load_state_dict(best_state)
     payload = {
@@ -390,6 +404,7 @@ def fit_cnn(
         "seed": seed,
         "dropout_rate": float(dropout_rate),
         "config_version": int(protocol["config_version"]),
+        "checkpoint_selection": rule,
         "epoch": best_epoch,
         "val_nll": best_nll,
         "model_state_dict": best_state,
@@ -412,7 +427,7 @@ def train_base(
     overwrite: bool = False,
     verbose: bool = False,
 ) -> Tuple[nn.Module, List[dict]]:
-    """Train one BASE model and save the minimum-validation-NLL checkpoint."""
+    """Train one BASE model and save the checkpoint picked by training.checkpoint_selection."""
     if protocol is None:
         protocol = load_protocol()
     else:

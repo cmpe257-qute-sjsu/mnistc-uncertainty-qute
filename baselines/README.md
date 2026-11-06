@@ -17,8 +17,10 @@ QUTE is not trained here.
 
 Run seeds are `11`, `22`, and `33`. Training is 20 epochs, batch size 256,
 Adam at learning rate `0.001`, decay `0.99` per epoch. The checkpoint kept is
-the epoch with the lowest validation NLL. Validation NLL is computed with
-dropout off. MC Dropout turns dropout back on only while predicting.
+set by `training.checkpoint_selection`: `final_epoch` keeps the epoch-20
+weights, as the paper does, and `min_val_nll` keeps the epoch with the lowest
+validation NLL. Validation NLL is computed and logged every epoch under both
+rules, with dropout off. MC Dropout turns dropout back on only while predicting.
 
 There is no separate dropout model. MC Dropout is
 `SharedCNN(CNNConfig(dropout_rate=0.1))`.
