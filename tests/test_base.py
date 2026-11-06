@@ -166,6 +166,7 @@ print("--------")
 
 def t_train_and_checkpoint():
     protocol = short_protocol()
+    protocol["training"]["checkpoint_selection"] = "min_val_nll"
     with tempfile.TemporaryDirectory() as directory:
         model, history = train_base(
             fake_loader(),
