@@ -169,8 +169,8 @@ def t_frozen_base_holds():
         QUTEModel.freeze_base = original_freeze
 
     assert "snapshot" in captured, "the freeze never engaged"
-    # Checkpoint selection may restore an earlier epoch, so compare the live
-    # parameters rather than the loaded best state.
+    # Under min_val_nll the loaded checkpoint may be an earlier epoch, so compare
+    # the live parameters rather than the saved state.
     for before, now in zip(captured["snapshot"], model.base.parameters()):
         assert before.shape == now.shape
 check("the freeze engages before the final epochs", t_frozen_base_holds)
@@ -200,6 +200,7 @@ print("-----------")
 
 def t_checkpoint_payload():
     p = short_protocol(epochs=3)
+    p["training"]["checkpoint_selection"] = "min_val_nll"
     train, val = loaders()
     with tempfile.TemporaryDirectory() as d:
         model, history = train_qute(train, val, seed=11, protocol=p,
@@ -211,13 +212,48 @@ def t_checkpoint_payload():
     assert saved["transfer"] is True
     assert saved["seed"] == 11
     assert saved["config_version"] == p["config_version"]
+    assert saved["checkpoint_selection"] == "min_val_nll"
     best = min(history, key=lambda r: r["val_nll"])
     assert saved["epoch"] == best["epoch"], (saved["epoch"], best["epoch"])
     assert abs(saved["val_nll"] - best["val_nll"]) < 1e-9
     assert saved["qute"]["ev_weights"] == [3.0, 3.5]
     assert saved["qute"]["tau_weights"] == [0.25, 0.5]
     assert saved["qute"]["deployed_parameters"] < saved["qute"]["training_parameters"]
-check("checkpoint keeps the minimum validation NLL and records the QUTE settings", t_checkpoint_payload)
+check("min_val_nll keeps the lowest validation NLL and records the QUTE settings", t_checkpoint_payload)
+
+
+def t_final_epoch_checkpoint():
+    """The protocol rule: keep the last epoch, which includes the frozen final stage."""
+    p = short_protocol(epochs=4)          # epoch 4 is the frozen epoch
+    p["training"]["checkpoint_selection"] = "final_epoch"
+    train, val = loaders()
+    with tempfile.TemporaryDirectory() as d:
+        model, history = train_qute(train, val, seed=11, protocol=p, checkpoint_dir=d)
+        saved = torch.load(qute_checkpoint_path(d, p["config_version"], 11, True),
+                           map_location="cpu", weights_only=False)
+    assert [r["epoch"] for r in history] == [1, 2, 3, 4]
+    assert all("val_nll" in r for r in history), "val NLL must still be logged every epoch"
+    assert history[-1]["frozen_base"] is True, "the last epoch should be a frozen one"
+    assert saved["checkpoint_selection"] == "final_epoch"
+    assert saved["epoch"] == 4, saved["epoch"]
+    assert abs(saved["val_nll"] - history[-1]["val_nll"]) < 1e-9
+    for key, value in model.state_dict().items():
+        assert torch.equal(saved["model_state_dict"][key], value.cpu()), key
+check("final_epoch keeps the last (frozen) epoch and still logs validation NLL", t_final_epoch_checkpoint)
+
+
+def t_unknown_checkpoint_rule():
+    p = short_protocol(epochs=1)
+    p["training"]["checkpoint_selection"] = "best_accuracy"
+    train, val = loaders()
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            train_qute(train, val, seed=11, protocol=p, checkpoint_dir=d)
+        except ValueError as exc:
+            assert "checkpoint_selection" in str(exc), exc
+            return
+    raise AssertionError("an unknown checkpoint_selection was accepted")
+check("an unknown checkpoint_selection is rejected", t_unknown_checkpoint_rule)
 
 def t_ablation_checkpoint_named_apart():
     p = short_protocol(epochs=2)
