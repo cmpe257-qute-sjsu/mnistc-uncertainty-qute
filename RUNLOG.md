@@ -31,12 +31,13 @@ earlier runs are still comparable.
 | 2026-10-19 | 2 | Added `model:` block - channels, kernel, pooling, head | Step 7 shared CNN needed a recorded architecture | None, no training has run |
 | 2026-10-22 | 3 | `training.data_order: fixed_by_split_seed`. MC Dropout `headline_is_prefix_of_reference: true` | Record that model seed does not change minibatch order, and that the 2-pass file is the first 2 of the 20 | None, no reported training has run |
 | 2026-10-30 | 4 | `training.num_workers: 0`. `fit_cnn` calls `pin_training_randomness` after model init | Keep augmentation tied to `split_seed`, not model seed; document worker init when num_workers > 0 | None, no reported training has run |
+| 2026-11-02 | 5 | Added `qute.tau: [0.25, 0.5]` and `evaluation.window_stride: 1`. `training.checkpoint_selection: final_epoch` (was `min_val_nll`), added 2026-11-05 | QUTE trainer needs early-exit weights; paper gives no tau values and no window stride. Final-epoch weights match the paper and keep QUTE's frozen stage | None, no training or evaluation has run |
 
 ## Decisions we made that the paper does not specify
 
 | Date | Decision | Reason | Goes in the report? |
 |---|---|---|---|
-|2026-10-17 | 50,000 / 10,000 validation split, seed 0 | Needed for checkpoint selection | Yes |
+|2026-10-17 | 50,000 / 10,000 validation split, seed 0 | Validation NLL is logged every epoch for reporting and overfitting checks (originally for checkpoint selection, dropped 2026-11-05) | Yes |
 |2026-10-17 | Seeds 11, 22, 33 | Paper reports 3 runs but not which seeds | Yes |
 |2026-10-17 | 15 equal-mass ECE bins | Confidences cluster near 1 | Yes, as a deviation |
 | 2026-10-19 | Channel widths [8, 16, 32, 32] | Paper says "4-layer CNN" but gives no widths | Yes, as a deviation |
@@ -44,3 +45,10 @@ earlier runs are still comparable.
 | 2026-10-22 | Deep-ensemble member k of run R is initialized with R * 100 + k (run 11 uses 1101–1105) | The protocol names 3 run seeds and 5 members, and does not list 5 initialization seeds | Yes |
 | 2026-10-30 | Adam: `training.momentum` is beta1; beta2 is fixed at 0.999 | Paper lists momentum for Adam without naming betas | Yes, as a deviation |
 | 2026-10-30 | After model init, global RNG is reseeded from `data.split_seed` so train-time augmentation matches across run seeds and ensemble members | `set_seed(model_seed)` would otherwise make RandomCrop/RandomRotation differ per seed | Yes |
+| 2026-11-02 | Early-exit loss weights tau = [0.25, 0.5] (relative depth of each exit) | Paper specifies w_EV (3.0, 3.5) but only cites Kaya et al. 2019 for tau, with no values | Yes, as a deviation |
+| 2026-11-02 | Models predict each condition once (clean + 15 corruptions = 16 files per model per seed). Streams are built in eval from saved predictions | Avoids re-predicting clean 15×, keeps sample IDs unique per file, keeps MC Dropout clean predictions consistent | Yes |
+| 2026-11-02 | Stream = clean MNIST test then one corruption. Window 100, stride 1 | Section 5 / Appendix A.3–A.4; stride is not stated in the paper | Yes, stride as a deviation |
+| 2026-11-02 | Degradation event = window accuracy strictly below μ_ID − 3σ_ID, with μ and σ from that model's clean-only window accuracies. Alarm = mean window confidence < ρ | Matches the paper and "below" in the config | Yes |
+| 2026-11-02 | Primary AUPRC = average precision on continuous mean confidence. Paper's 11-point ρ sweep reported separately for comparison | The two estimators give different values | Yes |
+| 2026-11-02 | AUPRC is marked undefined when a stream has no degradation events, never 0 or 1 | Follows `undefined_auprc_policy: mark_undefined` | Yes |
+| 2026-11-05 | All methods keep the final-epoch (20) weights; validation NLL is logged per epoch but does not select the checkpoint. Replaces min-val-NLL selection (2026-10-17) | QUTE's final stage (frozen base, epochs 19–20) is part of the method and selection could skip it; one rule for every method; matches the paper | Yes, as alignment with the paper |

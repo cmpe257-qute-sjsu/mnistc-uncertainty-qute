@@ -4,7 +4,7 @@
 # Settings marked [ours] are team defaults and must be named as deviations in the report.
 # Do not override these in individual training scripts. Change here, bump version, tell the team.
 
-config_version: 4
+config_version: 5
 
 data:
   dataset: mnist                      # [paper] 4-layer CNN on MNIST
@@ -25,7 +25,7 @@ training:
   momentum: 0.9                       # [paper]
   lr_decay_per_epoch: 0.99            # [paper]
   seeds: [11, 22, 33]                 # [ours] paper reports 3 runs but not which seeds
-  checkpoint_selection: min_val_nll   # [ours] paper trains a fixed 20 epochs, no selection
+  checkpoint_selection: final_epoch   # [paper] fixed 20 epochs, keep the final weights; val NLL logged only
   data_order: fixed_by_split_seed     # [ours] model seed does not change minibatch order
   num_workers: 0                      # [ours] fit_cnn reseeds aug RNG from split_seed; if >0, use baselines.base.worker_init_fn
 
@@ -34,6 +34,7 @@ qute:
   early_exit_after_layers: [1, 2]     # [paper]
   w_ev_0: 3.0                         # [paper] tested {2,3,4,5}, chose 3
   w_ev_delta: 0.5                     # [paper] w_EV(k) = w_EV(k-1) + delta -> [3.0, 3.5]
+  tau: [0.25, 0.5]                    # [ours] early-exit loss weights; paper cites Kaya et al. 2019, no values  
   transfer_layer_type: depthwise_conv # [paper] h_phi and h_theta are single depthwise convs
   pointwise_before_theta: true        # [paper] dimension matching at the early exit
   freeze_base_last_fraction: 0.10     # [paper] last 10% of epochs -> epochs 19 and 20
@@ -66,10 +67,11 @@ baselines:
 
 evaluation:
   window_size: 100                    # [paper] m = 100
+  window_stride: 1                    # [ours] paper does not state the stride; moving average over past 100
   score: mean_confidence              # [paper] max class probability; NOT entropy
   rho_sweep: {start: 0.0, stop: 1.0, step: 0.1}   # [paper]
   event_rule: acc_below_mu_minus_3sigma           # [paper] clean reference, 3 std devs
-  pr_area_estimator: average_precision            # [ours] state AP vs trapezoidal, they differ
+  pr_area_estimator: average_precision            # [ours] primary; paper's 11-point rho sweep reported separately
   undefined_auprc_policy: mark_undefined          # never substitute 0 or 1
   ece_bins: 15                        # [ours]
   ece_binning: equal_mass             # [ours] DEVIATION: paper uses equal-width bins

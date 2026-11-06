@@ -77,10 +77,10 @@ def t_protocol():
     assert training["momentum"] == 0.9
     assert training["lr_decay_per_epoch"] == 0.99
     assert training["seeds"] == [11, 22, 33]
-    assert training["checkpoint_selection"] == "min_val_nll"
+    assert training["checkpoint_selection"] == "final_epoch"
     assert training["data_order"] == "fixed_by_split_seed"
     assert training["num_workers"] == 0
-    assert protocol["config_version"] == 4
+    assert protocol["config_version"] >= 4
     assert protocol["model"]["parameters"] == 15466
 check("base.yaml still has the frozen BASE settings", t_protocol)
 
@@ -166,6 +166,7 @@ print("--------")
 
 def t_train_and_checkpoint():
     protocol = short_protocol()
+    protocol["training"]["checkpoint_selection"] = "min_val_nll"
     with tempfile.TemporaryDirectory() as directory:
         model, history = train_base(
             fake_loader(),

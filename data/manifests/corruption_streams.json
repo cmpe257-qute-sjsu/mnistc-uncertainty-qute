@@ -1,5 +1,5 @@
 {
-  "config_version": 4,
+  "config_version": 5,
   "dataset": "MNIST-C",
   "split_fingerprint": "aaed0a23690e2e3c",
   "normalization": {
