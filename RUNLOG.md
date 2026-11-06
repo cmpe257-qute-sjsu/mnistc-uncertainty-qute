@@ -7,8 +7,9 @@ Status values: `ok`, `failed`, `superseded`.
 
 | Date | Who | Run ID | Method | Seed | Commit | Config ver | Output path | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| 2026-11-05 | Smitha | base-11 | base | 11 | <hash> | 5 | results/preds/base_seed11_clean.npz | ok | Clean test acc 0.9698 (paper ~0.91); our CNN is stronger, see channel-width deviation |
-
+| 2026-11-05 | Smitha | base-11 | base | 11 | 8fb4208 | 5 | results/preds/base_seed11_clean.npz | ok | Clean test acc 0.9698 (paper ~0.91); our CNN is stronger, see channel-width deviation |
+| 2026-11-05 | Smitha | base-22 | base | 22 | 8fb4208 | 5 | results/preds/base_seed22_clean.npz | ok | Clean test acc 0.9742 |
+| 2026-11-05 | Smitha | base-33 | base | 33 | 8fb4208 | 5 | results/preds/base_seed33_clean.npz | ok | Clean test acc 0.9711. BASE mean 0.9717 ± 0.0023 over 3 seeds |
 ## Environment fingerprints (Step 1)
 
 Each of us runs `python tests/smoke_test.py` and records the result. These must
@@ -40,7 +41,7 @@ earlier runs are still comparable.
 |2026-10-17 | 50,000 / 10,000 validation split, seed 0 | Validation NLL is logged every epoch for reporting and overfitting checks (originally for checkpoint selection, dropped 2026-11-05) | Yes |
 |2026-10-17 | Seeds 11, 22, 33 | Paper reports 3 runs but not which seeds | Yes |
 |2026-10-17 | 15 equal-mass ECE bins | Confidences cluster near 1 | Yes, as a deviation |
-| 2026-10-19 | Channel widths [8, 16, 32, 32] | Paper says "4-layer CNN" but gives no widths | Yes, as a deviation |
+| 2026-10-19 | Channel widths [8, 16, 32, 32] | Paper says "4-layer CNN" but gives no widths. Resulting BASE clean accuracy is ~97% vs the paper's ~91%, so our base model is stronger than theirs | Yes, as a deviation |
 | 2026-10-22 | Minibatch order is fixed by split seed 0 for every model seed and ensemble member. Ensemble diversity is initialization only | A shared global RNG would also change data order when the model seed changes, which confounds the QUTE comparison | Yes |
 | 2026-10-22 | Deep-ensemble member k of run R is initialized with R * 100 + k (run 11 uses 1101–1105) | The protocol names 3 run seeds and 5 members, and does not list 5 initialization seeds | Yes |
 | 2026-10-30 | Adam: `training.momentum` is beta1; beta2 is fixed at 0.999 | Paper lists momentum for Adam without naming betas | Yes, as a deviation |
