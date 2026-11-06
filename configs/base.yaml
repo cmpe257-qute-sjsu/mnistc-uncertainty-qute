@@ -25,7 +25,7 @@ training:
   momentum: 0.9                       # [paper]
   lr_decay_per_epoch: 0.99            # [paper]
   seeds: [11, 22, 33]                 # [ours] paper reports 3 runs but not which seeds
-  checkpoint_selection: min_val_nll   # [ours] paper trains a fixed 20 epochs, no selection
+  checkpoint_selection: final_epoch   # [paper] fixed 20 epochs, keep the final weights; val NLL logged only
   data_order: fixed_by_split_seed     # [ours] model seed does not change minibatch order
   num_workers: 0                      # [ours] fit_cnn reseeds aug RNG from split_seed; if >0, use baselines.base.worker_init_fn
 

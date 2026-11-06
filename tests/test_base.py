@@ -77,7 +77,7 @@ def t_protocol():
     assert training["momentum"] == 0.9
     assert training["lr_decay_per_epoch"] == 0.99
     assert training["seeds"] == [11, 22, 33]
-    assert training["checkpoint_selection"] == "min_val_nll"
+    assert training["checkpoint_selection"] == "final_epoch"
     assert training["data_order"] == "fixed_by_split_seed"
     assert training["num_workers"] == 0
     assert protocol["config_version"] >= 4

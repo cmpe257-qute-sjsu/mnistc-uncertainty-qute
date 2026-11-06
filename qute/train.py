@@ -36,6 +36,7 @@ from models.qute import (
 from models.shared_cnn import CNNConfig, build_model
 
 from baselines.base import (
+    CHECKPOINT_RULES,
     _refuse_existing,
     _require_indexed_eval_loader,
     assert_train_batch_size,
@@ -99,12 +100,12 @@ def build_qute_from_protocol(protocol: dict, seed: int) -> QUTEModel:
 
 @torch.no_grad()
 def deployed_nll(model: QUTEModel, loader: DataLoader, device: torch.device) -> float:
-    """Mean NLL of the DEPLOYED prediction, for checkpoint selection.
+    """Mean NLL of the DEPLOYED prediction, logged every epoch (and used for
+    selection under min_val_nll).
 
     The deployed prediction is the mean of the output blocks' probabilities, so
     this is -log(mean_prob[true class]) -- not cross-entropy on any single set
-    of logits. Selecting on the training objective instead would optimise a
-    quantity we never report.
+    of logits.
     """
     model.eval()
     total, count = 0.0, 0
@@ -150,6 +151,9 @@ def train_qute(
         )
 
     training = protocol["training"]
+    rule = training["checkpoint_selection"]
+    if rule not in CHECKPOINT_RULES:
+        raise ValueError(f"training.checkpoint_selection is {rule!r}; train_qute implements {list(CHECKPOINT_RULES)}")
     assert_train_batch_size(train_loader, int(training["batch_size"]))
     torch_device = torch.device(device)
 
@@ -233,11 +237,15 @@ def train_qute(
                 + ("  [base frozen]" if frozen else "")
             )
 
-        if val_nll < best_nll:
+        if rule == "min_val_nll" and val_nll < best_nll:
             best_nll, best_epoch = val_nll, epoch
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
         scheduler.step()
+    if rule == "final_epoch":
+        best_nll = history[-1]["val_nll"]
+        best_epoch = history[-1]["epoch"]
+        best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
     model.freeze_base(False)
     model.load_state_dict(best_state)
@@ -249,6 +257,7 @@ def train_qute(
         "dropout_rate": 0.0,
         "config_version": int(protocol["config_version"]),
         "epoch": best_epoch,
+        "checkpoint_selection": rule,
         "val_nll": best_nll,
         "val_nll_definition": "mean -log p(true class) of the averaged output blocks",
         "model_state_dict": best_state,
