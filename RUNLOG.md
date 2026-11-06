@@ -7,7 +7,7 @@ Status values: `ok`, `failed`, `superseded`.
 
 | Date | Who | Run ID | Method | Seed | Commit | Config ver | Output path | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | |
+| 2026-11-05 | Smitha | base-11 | base | 11 | <hash> | 5 | results/preds/base_seed11_clean.npz | ok | Clean test acc 0.9698 (paper ~0.91); our CNN is stronger, see channel-width deviation |
 
 ## Environment fingerprints (Step 1)
 
