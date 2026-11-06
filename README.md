@@ -74,8 +74,6 @@ Track these here as they come up. Every one goes in the final report.
 | Setting | Paper | Ours | Why |
 |---|---|---|---|
 | ECE binning | Equal-width bins | 15 equal-mass bins | Confidences cluster near 1, so equal-width bins are badly imbalanced. The paper itself criticizes ECE binning in Appendix C. |
-| Checkpoint selection | Fixed 20 epochs, no selection | Minimum clean-validation NLL | Guards against an unlucky final epoch. |
-| Validation split | Not specified | 50,000 / 10,000, seed 0 | Needed for checkpoint selection and tuning. |
 
 ## Things that will surprise you
 
