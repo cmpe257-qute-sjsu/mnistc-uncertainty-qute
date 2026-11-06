@@ -7,7 +7,15 @@ Status values: `ok`, `failed`, `superseded`.
 
 | Date | Who | Run ID | Method | Seed | Commit | Config ver | Output path | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | |
+| 2026-11-05 | Anusha | base_s11 | BASE | 11 | 8fb4208 | 5 | `checkpoints/base_config5_seed11.pt`, `results/preds/base_seed11_clean.npz` | ok | 20 epochs, final_epoch. Clean test acc 97.21%, val NLL 0.1037 |
+| 2026-11-05 | Anusha | base_s22 | BASE | 22 | 8fb4208 | 5 | `checkpoints/base_config5_seed22.pt`, `results/preds/base_seed22_clean.npz` | ok | 20 epochs, final_epoch. Clean test acc 97.47%, val NLL 0.0960 |
+| 2026-11-05 | Anusha | base_s33 | BASE | 33 | 8fb4208 | 5 | `checkpoints/base_config5_seed33.pt`, `results/preds/base_seed33_clean.npz` | ok | 20 epochs, final_epoch. Clean test acc 97.08%, val NLL 0.1098. BASE 97.25 ± 0.20, matches Smitha's run |
+| 2026-11-05 | Anusha | mc_dropout_s11 | MC Dropout | 11 | 8fb4208 | 5 | `checkpoints/mc_dropout_config5_seed11.pt`, `results/preds/mc_dropout_seed11_clean_passes{2,20}.npz` | ok | 20 epochs, final_epoch, dropout 0.1. Clean test acc 97.47% (2 passes) / 97.62% (20 passes), val NLL 0.0850 |
+| 2026-11-05 | Anusha | mc_dropout_s22 | MC Dropout | 22 | 8fb4208 | 5 | `checkpoints/mc_dropout_config5_seed22.pt`, `results/preds/mc_dropout_seed22_clean_passes{2,20}.npz` | ok | 20 epochs, final_epoch, dropout 0.1. Clean test acc 97.06% / 97.46%, val NLL 0.0870 |
+| 2026-11-05 | Anusha | mc_dropout_s33 | MC Dropout | 33 | 8fb4208 | 5 | `checkpoints/mc_dropout_config5_seed33.pt`, `results/preds/mc_dropout_seed33_clean_passes{2,20}.npz` | ok | 20 epochs, final_epoch, dropout 0.1. Clean test acc 96.95% / 97.34%, val NLL 0.1003 |
+| 2026-11-06 | Anusha | deep_ensemble_r11 | Deep ensemble | 11 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run11_member{1-5}_seed{1101-1105}.pt`, `results/preds/deep_ensemble_seed11_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.66% (2 members) / 97.88% (5 members) |
+| 2026-11-06 | Anusha | deep_ensemble_r22 | Deep ensemble | 22 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run22_member{1-5}_seed{2201-2205}.pt`, `results/preds/deep_ensemble_seed22_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.17% / 97.69% |
+| 2026-11-06 | Anusha | deep_ensemble_r33 | Deep ensemble | 33 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run33_member{1-5}_seed{3301-3305}.pt`, `results/preds/deep_ensemble_seed33_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.69% / 97.95% |
 
 ## Environment fingerprints (Step 1)
 
