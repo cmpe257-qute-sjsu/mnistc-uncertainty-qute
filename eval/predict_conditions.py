@@ -62,6 +62,8 @@ from baselines.mc_dropout import (
     mc_checkpoint_path,
     mc_prediction_path,
 )
+from qute.evaluate import load_qute_checkpoint
+from qute.train import evaluate_qute, qute_prediction_path
 
 DEFAULT_OUT_DIR = Path("results/preds/conditions")
 DEFAULT_CHECKPOINT_DIR = Path("checkpoints")
@@ -196,12 +198,36 @@ def predict_deep_ensemble(protocol, seed, loaders, label_maps, out_dir, checkpoi
             print(f"  saved {path}")
     return written
 
+def _predict_qute(transfer, protocol, seed, loaders, label_maps, out_dir, checkpoint_dir, overwrite, device) -> List[Path]:
+    model, _payload = load_qute_checkpoint(protocol, seed, transfer, checkpoint_dir=checkpoint_dir, device=device)
+    written = []
+    for condition, loader in loaders.items():
+        path = qute_prediction_path(seed, condition, transfer, directory=out_dir)
+        if path.exists() and not overwrite:
+            print(f"  skip  {path} (exists)")
+            continue
+        evaluate_qute(model, loader, seed=seed, protocol=protocol, path=path,
+                      condition=condition, transfer=transfer, overwrite=overwrite, device=device)
+        attach_labels(path, label_maps[condition])
+        written.append(path)
+        print(f"  saved {path}")
+    return written
+
+
+def predict_qute(protocol, seed, loaders, label_maps, out_dir, checkpoint_dir, overwrite, device) -> List[Path]:
+    return _predict_qute(True, protocol, seed, loaders, label_maps, out_dir, checkpoint_dir, overwrite, device)
+
+
+def predict_qute_no_transfer(protocol, seed, loaders, label_maps, out_dir, checkpoint_dir, overwrite, device) -> List[Path]:
+    return _predict_qute(False, protocol, seed, loaders, label_maps, out_dir, checkpoint_dir, overwrite, device)
 
 # name -> function(protocol, seed, loaders, label_maps, out_dir, checkpoint_dir, overwrite, device)
 METHODS: Dict[str, Callable] = {
     "base": predict_base,
     "mc_dropout": predict_mc_dropout,
     "deep_ensemble": predict_deep_ensemble,
+    "qute": predict_qute,
+    "qute_no_transfer": predict_qute_no_transfer,
 }
 
 
