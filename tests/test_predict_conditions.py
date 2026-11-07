@@ -220,9 +220,28 @@ def t_wrong_method():
         expect(ValueError, "expected 'base'", lambda: run(protocol, loaders, ["base"], [SEED], Path(d) / "out", ckpt))
 check("a checkpoint for the wrong method is refused", t_wrong_method)
 
+def t_strict_checkpoint_rule():
+    loaders, _labels = fake_loaders()
+    version = int(protocol["config_version"])
+    with tempfile.TemporaryDirectory() as d:
+        ckpt = Path(d) / "ckpt"
+        path = checkpoint_path(ckpt, version, SEED)
+        save_ckpt(path, protocol, "base", SEED, 0.0)
+        payload = torch.load(path, weights_only=False)
+        del payload["checkpoint_selection"]
+        torch.save(payload, path)
+        expect(ValueError, "does not record checkpoint_selection",
+               lambda: run(protocol, loaders, ["base"], [SEED], Path(d) / "out", ckpt))
+        payload["checkpoint_selection"] = "final_epoch"
+        payload["epoch"] = 14
+        torch.save(payload, path)
+        expect(ValueError, "saved epoch 14",
+               lambda: run(protocol, loaders, ["base"], [SEED], Path(d) / "out", ckpt))
+check("checkpoints must record their rule, and final_epoch must be the last epoch", t_strict_checkpoint_rule)
+
 def t_unknown_method():
     loaders, _labels = fake_loaders()
-    expect(ValueError, "unknown methods", lambda: run(protocol, loaders, ["qute"], [SEED]))
+    expect(ValueError, "unknown methods", lambda: run(protocol, loaders, ["not_a_method"], [SEED]))
 check("an unregistered method is refused", t_unknown_method)
 
 def t_label_alignment():
