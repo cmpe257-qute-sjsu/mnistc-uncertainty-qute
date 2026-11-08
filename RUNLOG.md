@@ -7,9 +7,26 @@ Status values: `ok`, `failed`, `superseded`.
 
 | Date | Who | Run ID | Method | Seed | Commit | Config ver | Output path | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| 2026-11-05 | Smitha | base-11 | base | 11 | 8fb4208 | 5 | results/preds/base_seed11_clean.npz | ok | Clean test acc 0.9698 (paper ~0.91); our CNN is stronger, see channel-width deviation |
-| 2026-11-05 | Smitha | base-22 | base | 22 | 8fb4208 | 5 | results/preds/base_seed22_clean.npz | ok | Clean test acc 0.9742 |
-| 2026-11-05 | Smitha | base-33 | base | 33 | 8fb4208 | 5 | results/preds/base_seed33_clean.npz | ok | Clean test acc 0.9711. BASE mean 0.9717 ± 0.0023 over 3 seeds |
+| 2026-11-05 | Anusha | base_s11 | BASE | 11 | 8fb4208 | 5 | `checkpoints/base_config5_seed11.pt`, `results/preds/base_seed11_clean.npz` | ok | 20 epochs, final_epoch. Clean test acc 97.21%, val NLL 0.1037 |
+| 2026-11-05 | Anusha | base_s22 | BASE | 22 | 8fb4208 | 5 | `checkpoints/base_config5_seed22.pt`, `results/preds/base_seed22_clean.npz` | ok | 20 epochs, final_epoch. Clean test acc 97.47%, val NLL 0.0960 |
+| 2026-11-05 | Anusha | base_s33 | BASE | 33 | 8fb4208 | 5 | `checkpoints/base_config5_seed33.pt`, `results/preds/base_seed33_clean.npz` | ok | 20 epochs, final_epoch. Clean test acc 97.08%, val NLL 0.1098 |
+| 2026-11-05 | Anusha | mc_dropout_s11 | MC Dropout | 11 | 8fb4208 | 5 | `checkpoints/mc_dropout_config5_seed11.pt`, `results/preds/mc_dropout_seed11_clean_passes{2,20}.npz` | ok | 20 epochs, final_epoch, dropout 0.1. Clean test acc 97.47% (2 passes) / 97.62% (20 passes), val NLL 0.0850 |
+| 2026-11-05 | Anusha | mc_dropout_s22 | MC Dropout | 22 | 8fb4208 | 5 | `checkpoints/mc_dropout_config5_seed22.pt`, `results/preds/mc_dropout_seed22_clean_passes{2,20}.npz` | ok | 20 epochs, final_epoch, dropout 0.1. Clean test acc 97.06% / 97.46%, val NLL 0.0870 |
+| 2026-11-05 | Anusha | mc_dropout_s33 | MC Dropout | 33 | 8fb4208 | 5 | `checkpoints/mc_dropout_config5_seed33.pt`, `results/preds/mc_dropout_seed33_clean_passes{2,20}.npz` | ok | 20 epochs, final_epoch, dropout 0.1. Clean test acc 96.95% / 97.34%, val NLL 0.1003 |
+| 2026-11-06 | Anusha | deep_ensemble_r11 | Deep ensemble | 11 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run11_member{1-5}_seed{1101-1105}.pt`, `results/preds/deep_ensemble_seed11_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.66% (2 members) / 97.88% (5 members) |
+| 2026-11-06 | Anusha | deep_ensemble_r22 | Deep ensemble | 22 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run22_member{1-5}_seed{2201-2205}.pt`, `results/preds/deep_ensemble_seed22_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.17% / 97.69% |
+| 2026-11-06 | Anusha | deep_ensemble_r33 | Deep ensemble | 33 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run33_member{1-5}_seed{3301-3305}.pt`, `results/preds/deep_ensemble_seed33_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.69% / 97.95% |
+| 2026-11-05 | Smitha | base-11 | BASE | 11 | 8fb4208 | 5 | `results/preds/base_seed11_clean.npz` (local) | superseded | Cross-machine reproducibility check; Anusha's BASE checkpoints are the official ones. Clean test acc 96.98% vs her 97.21% from the same commit, config and seed |
+| 2026-11-05 | Smitha | base-22 | BASE | 22 | 8fb4208 | 5 | `results/preds/base_seed22_clean.npz` (local) | superseded | Cross-machine check. 97.42% vs 97.47% |
+| 2026-11-05 | Smitha | base-33 | BASE | 33 | 8fb4208 | 5 | `results/preds/base_seed33_clean.npz` (local) | superseded | Cross-machine check. 97.11% vs 97.08%. CPU training is not bit-reproducible across machines; differences are about 0.2 points, the size of the seed spread |
+| 2026-11-05 | Smitha | qute_s11 | QUTE | 11 | 8fb4208 | 5 | `checkpoints/qute_config5_seed11.pt` | ok | 20 epochs, final_epoch, base frozen epochs 19–20. Clean test acc 97.33% |
+| 2026-11-05 | Smitha | qute_s22 | QUTE | 22 | 8fb4208 | 5 | `checkpoints/qute_config5_seed22.pt` | ok | Clean test acc 97.67% |
+| 2026-11-05 | Smitha | qute_s33 | QUTE | 33 | 8fb4208 | 5 | `checkpoints/qute_config5_seed33.pt` | ok | Clean test acc 97.72%. QUTE 97.57 ± 0.21 |
+| 2026-11-05 | Smitha | qute_nt_s11 | QUTE no transfer | 11 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed11.pt` | ok | Ablation: transfer off, everything else identical. Clean test acc 97.64% |
+| 2026-11-05 | Smitha | qute_nt_s22 | QUTE no transfer | 22 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed22.pt` | ok | Clean test acc 97.65% |
+| 2026-11-05 | Smitha | qute_nt_s33 | QUTE no transfer | 33 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed33.pt` | ok | Clean test acc 97.75%. Ablation 97.68 ± 0.06, matches QUTE on accuracy as expected (transfer targets calibration, not accuracy) |
+| 2026-11-06 | Smitha | qute_eval | QUTE + no transfer | 11, 22, 33 | 25494c5 | 5 | `results/preds/conditions/qute*_seed*_{condition}.npz` | ok | 96 files, 16 conditions each, labels attached, via eval/predict_conditions.py |
+
 ## Environment fingerprints (Step 1)
 
 Each of us runs `python tests/smoke_test.py` and records the result. These must
