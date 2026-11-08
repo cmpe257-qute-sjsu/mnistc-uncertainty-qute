@@ -103,7 +103,7 @@ def t_full_run():
     with tempfile.TemporaryDirectory() as d:
         ckpt, out = Path(d) / "ckpt", Path(d) / "out"
         write_checkpoints(ckpt, protocol)
-        written = run(protocol, loaders, list(METHODS), [SEED], out, ckpt)
+        written = run(protocol, loaders, ["base", "mc_dropout", "deep_ensemble"], [SEED], out, ckpt)
         names = sorted(p.name for p in out.glob("*.npz"))
         expected = sorted(t.format(c=c) for t in EXPECTED for c in ("clean", "shot_noise"))
         assert names == expected, names
