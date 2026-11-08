@@ -227,3 +227,6 @@ data/*.gz
 
 # Trained weights stay local
 checkpoints/
+
+# Model predictions stay local (large)
+results/preds/

@@ -16,6 +16,16 @@ Status values: `ok`, `failed`, `superseded`.
 | 2026-11-06 | Anusha | deep_ensemble_r11 | Deep ensemble | 11 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run11_member{1-5}_seed{1101-1105}.pt`, `results/preds/deep_ensemble_seed11_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.66% (2 members) / 97.88% (5 members) |
 | 2026-11-06 | Anusha | deep_ensemble_r22 | Deep ensemble | 22 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run22_member{1-5}_seed{2201-2205}.pt`, `results/preds/deep_ensemble_seed22_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.17% / 97.69% |
 | 2026-11-06 | Anusha | deep_ensemble_r33 | Deep ensemble | 33 | 8fb4208 | 5 | `checkpoints/deep_ensemble_config5_run33_member{1-5}_seed{3301-3305}.pt`, `results/preds/deep_ensemble_seed33_clean_members{2,5}.npz` | ok | 5 members, 20 epochs each, final_epoch. Clean test acc 97.69% / 97.95% |
+| 2026-11-05 | Smitha | base-11 | BASE | 11 | 8fb4208 | 5 | `results/preds/base_seed11_clean.npz` (local) | superseded | Cross-machine reproducibility check; Anusha's BASE checkpoints are the official ones. Clean test acc 96.98% vs her 97.21% from the same commit, config and seed |
+| 2026-11-05 | Smitha | base-22 | BASE | 22 | 8fb4208 | 5 | `results/preds/base_seed22_clean.npz` (local) | superseded | Cross-machine check. 97.42% vs 97.47% |
+| 2026-11-05 | Smitha | base-33 | BASE | 33 | 8fb4208 | 5 | `results/preds/base_seed33_clean.npz` (local) | superseded | Cross-machine check. 97.11% vs 97.08%. CPU training is not bit-reproducible across machines; differences are about 0.2 points, the size of the seed spread |
+| 2026-11-05 | Smitha | qute_s11 | QUTE | 11 | 8fb4208 | 5 | `checkpoints/qute_config5_seed11.pt` | ok | 20 epochs, final_epoch, base frozen epochs 19–20. Clean test acc 97.33% |
+| 2026-11-05 | Smitha | qute_s22 | QUTE | 22 | 8fb4208 | 5 | `checkpoints/qute_config5_seed22.pt` | ok | Clean test acc 97.67% |
+| 2026-11-05 | Smitha | qute_s33 | QUTE | 33 | 8fb4208 | 5 | `checkpoints/qute_config5_seed33.pt` | ok | Clean test acc 97.72%. QUTE 97.57 ± 0.21 |
+| 2026-11-05 | Smitha | qute_nt_s11 | QUTE no transfer | 11 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed11.pt` | ok | Ablation: transfer off, everything else identical. Clean test acc 97.64% |
+| 2026-11-05 | Smitha | qute_nt_s22 | QUTE no transfer | 22 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed22.pt` | ok | Clean test acc 97.65% |
+| 2026-11-05 | Smitha | qute_nt_s33 | QUTE no transfer | 33 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed33.pt` | ok | Clean test acc 97.75%. Ablation 97.68 ± 0.06, matches QUTE on accuracy as expected (transfer targets calibration, not accuracy) |
+| 2026-11-06 | Smitha | qute_eval | QUTE + no transfer | 11, 22, 33 | 25494c5 | 5 | `results/preds/conditions/qute*_seed*_{condition}.npz` | ok | 96 files, 16 conditions each, labels attached, via eval/predict_conditions.py |
 
 ## Environment fingerprints (Step 1)
 
@@ -48,7 +58,7 @@ earlier runs are still comparable.
 |2026-10-17 | 50,000 / 10,000 validation split, seed 0 | Validation NLL is logged every epoch for reporting and overfitting checks (originally for checkpoint selection, dropped 2026-11-05) | Yes |
 |2026-10-17 | Seeds 11, 22, 33 | Paper reports 3 runs but not which seeds | Yes |
 |2026-10-17 | 15 equal-mass ECE bins | Confidences cluster near 1 | Yes, as a deviation |
-| 2026-10-19 | Channel widths [8, 16, 32, 32] | Paper says "4-layer CNN" but gives no widths | Yes, as a deviation |
+| 2026-10-19 | Channel widths [8, 16, 32, 32] | Paper says "4-layer CNN" but gives no widths. Resulting BASE clean accuracy is ~97% vs the paper's ~91%, so our base model is stronger than theirs | Yes, as a deviation |
 | 2026-10-22 | Minibatch order is fixed by split seed 0 for every model seed and ensemble member. Ensemble diversity is initialization only | A shared global RNG would also change data order when the model seed changes, which confounds the QUTE comparison | Yes |
 | 2026-10-22 | Deep-ensemble member k of run R is initialized with R * 100 + k (run 11 uses 1101–1105) | The protocol names 3 run seeds and 5 members, and does not list 5 initialization seeds | Yes |
 | 2026-10-30 | Adam: `training.momentum` is beta1; beta2 is fixed at 0.999 | Paper lists momentum for Adam without naming betas | Yes, as a deviation |
