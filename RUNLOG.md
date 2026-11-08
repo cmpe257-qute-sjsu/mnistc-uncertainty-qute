@@ -26,6 +26,9 @@ Status values: `ok`, `failed`, `superseded`.
 | 2026-11-05 | Smitha | qute_nt_s22 | QUTE no transfer | 22 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed22.pt` | ok | Clean test acc 97.65% |
 | 2026-11-05 | Smitha | qute_nt_s33 | QUTE no transfer | 33 | 8fb4208 | 5 | `checkpoints/qute_no_transfer_config5_seed33.pt` | ok | Clean test acc 97.75%. Ablation 97.68 ± 0.06, matches QUTE on accuracy as expected (transfer targets calibration, not accuracy) |
 | 2026-11-06 | Smitha | qute_eval | QUTE + no transfer | 11, 22, 33 | 25494c5 | 5 | `results/preds/conditions/qute*_seed*_{condition}.npz` | ok | 96 files, 16 conditions each, labels attached, via eval/predict_conditions.py |
+| 2026-11-07 | Anusha | base_eval | BASE | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/base_seed*_{condition}.npz` | ok | 48 files, 16 conditions each, labels attached, via eval/predict_conditions.py |
+| 2026-11-07 | Anusha | mc_dropout_eval | MC Dropout | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/mc_dropout_seed*_{condition}_passes{2,20}.npz` | ok | 96 files (2-pass headline + 20-pass reference), 16 conditions each, labels attached, via eval/predict_conditions.py |
+| 2026-11-07 | Anusha | deep_ensemble_eval | Deep ensemble | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/deep_ensemble_seed*_{condition}_members{2,5}.npz` | ok | 96 files (2-member headline + 5-member reference), 16 conditions each, labels attached, via eval/predict_conditions.py |
 
 ## Environment fingerprints (Step 1)
 
