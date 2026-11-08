@@ -27,8 +27,10 @@ MC Dropout and the ensemble), plus:
     labels      [N] int64    true class, aligned to sample_ids
     confidence  [N] float32  max softmax probability of probs
 
-MC Dropout passes are seeded with the model seed (evaluate_mc_dropout does
-this), so rerunning gives identical files.
+MC Dropout passes are seeded with the model seed only (evaluate_mc_dropout
+does this), not with a separate seed per condition. Every condition therefore
+sees the same sequence of dropout masks (common random numbers), and rerunning
+gives identical files. Describe it this way in the report.
 
 Adding a method (e.g. QUTE): write a function with the same signature as
 predict_base below and add it to METHODS.
@@ -121,11 +123,16 @@ def load_cnn(path: Path, protocol: dict, expected_method: str, device: str = "cp
             f"{path} was trained with config v{payload['config_version']}, "
             f"but configs/base.yaml is v{protocol['config_version']}"
         )
+    expected_rule = protocol["training"]["checkpoint_selection"]
     rule = payload.get("checkpoint_selection")
-    if rule is not None and rule != protocol["training"]["checkpoint_selection"]:
+    if rule is None:
+        raise ValueError(f"{path} does not record checkpoint_selection; it predates config v5")
+    if rule != expected_rule:
+        raise ValueError(f"{path} used checkpoint_selection {rule!r}, protocol says {expected_rule!r}")
+    if rule == "final_epoch" and int(payload["epoch"]) != int(protocol["training"]["epochs"]):
         raise ValueError(
-            f"{path} used checkpoint_selection {rule!r}, protocol says "
-            f"{protocol['training']['checkpoint_selection']!r}"
+            f"{path} saved epoch {payload['epoch']}, but final_epoch should keep epoch "
+            f"{protocol['training']['epochs']}"
         )
     model = build_cnn_model(protocol, int(payload["seed"]), float(payload["dropout_rate"]))
     model.load_state_dict(payload["model_state_dict"])
