@@ -1,0 +1,302 @@
+{
+  "shot_noise": {
+    "stream_name": "clean_to_shot_noise",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "shot_noise",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "impulse_noise": {
+    "stream_name": "clean_to_impulse_noise",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "impulse_noise",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "glass_blur": {
+    "stream_name": "clean_to_glass_blur",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "glass_blur",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "motion_blur": {
+    "stream_name": "clean_to_motion_blur",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "motion_blur",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "shear": {
+    "stream_name": "clean_to_shear",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "shear",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "scale": {
+    "stream_name": "clean_to_scale",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "scale",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "rotate": {
+    "stream_name": "clean_to_rotate",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "rotate",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "brightness": {
+    "stream_name": "clean_to_brightness",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "brightness",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "translate": {
+    "stream_name": "clean_to_translate",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "translate",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "stripe": {
+    "stream_name": "clean_to_stripe",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "stripe",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "fog": {
+    "stream_name": "clean_to_fog",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "fog",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "spatter": {
+    "stream_name": "clean_to_spatter",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "spatter",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "dotted_line": {
+    "stream_name": "clean_to_dotted_line",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "dotted_line",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "zigzag": {
+    "stream_name": "clean_to_zigzag",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "zigzag",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  },
+  "canny_edges": {
+    "stream_name": "clean_to_canny_edges",
+    "total_samples": 20000,
+    "segments": [
+      {
+        "condition": "clean",
+        "start": 0,
+        "stop_exclusive": 10000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      },
+      {
+        "condition": "canny_edges",
+        "start": 10000,
+        "stop_exclusive": 20000,
+        "sample_id_start": 0,
+        "sample_id_stop_exclusive": 10000
+      }
+    ]
+  }
+}
