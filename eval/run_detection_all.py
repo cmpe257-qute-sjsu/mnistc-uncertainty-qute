@@ -1,0 +1,111 @@
+
+"""Run detection/AUPRC on every saved condition prediction file."""
+
+import csv
+from collections import defaultdict
+from pathlib import Path
+
+from data.prepare_mnistc import CORRUPTIONS
+from eval.detection import load_predictions, evaluate_detection
+
+
+PRED_DIR = Path("results/preds/conditions")
+OUT_DIR = Path("results/detection")
+
+
+def save_csv(path, rows):
+    if not rows:
+        raise ValueError(f"No results to save: {path}")
+
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def main():
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    clean_files = sorted(PRED_DIR.glob("*_clean*.npz"))
+    if not clean_files:
+        raise FileNotFoundError(
+            f"No clean prediction files found in {PRED_DIR}"
+        )
+
+    results = []
+    sweep_results = []
+
+    for clean_path in clean_files:
+        stem = clean_path.stem
+        method, separator, rest = stem.partition("_seed")
+
+        if not separator:
+            raise ValueError(f"Unexpected filename: {clean_path.name}")
+
+        seed, separator, variant = rest.partition("_clean")
+        if not separator or not seed.isdigit():
+            raise ValueError(f"Unexpected filename: {clean_path.name}")
+
+        model_id = f"{method}_seed{seed}"
+        if variant:
+            model_id += variant
+
+        clean = load_predictions(clean_path)
+
+        for corruption in CORRUPTIONS:
+            corrupted_name = clean_path.name.replace(
+                "_clean", f"_{corruption}", 1
+            )
+            corrupted_path = PRED_DIR / corrupted_name
+
+            if not corrupted_path.exists():
+                raise FileNotFoundError(
+                    f"Missing prediction file: {corrupted_path}"
+                )
+
+            corrupted = load_predictions(corrupted_path)
+            outcome = evaluate_detection(clean, corrupted)
+
+            results.append({
+                "model_id": model_id,
+                "method": method,
+                "seed": int(seed),
+                "corruption": corruption,
+                "total_windows": outcome["total_windows"],
+                "degradation_events": outcome["degradation_events"],
+                "clean_reference_mean": outcome["clean_reference_mean"],
+                "clean_reference_std": outcome["clean_reference_std"],
+                "degradation_threshold": outcome["degradation_threshold"],
+                "average_precision": outcome["average_precision"],
+            })
+
+            for point in outcome["rho_sweep"]:
+                sweep_results.append({
+                    "model_id": model_id,
+                    "method": method,
+                    "seed": int(seed),
+                    "corruption": corruption,
+                    **point,
+                })
+
+        print(f"Completed: {model_id}")
+
+    save_csv(OUT_DIR / "detection_per_stream.csv", results)
+    save_csv(OUT_DIR / "detection_rho_sweep.csv", sweep_results)
+
+    groups = defaultdict(list)
+    for row in results:
+        if row["average_precision"] is not None:
+            groups[row["model_id"]].append(row["average_precision"])
+
+    print("\nAverage Precision by model configuration:")
+    for model_id, values in sorted(groups.items()):
+        print(f"{model_id}: {sum(values) / len(values):.4f}")
+
+    print(f"\nStreams evaluated: {len(results)}")
+    print(f"Threshold rows: {len(sweep_results)}")
+    print(f"Saved results to: {OUT_DIR}")
+
+
+if __name__ == "__main__":
+    main()
