@@ -7,7 +7,9 @@ Reads every file in results/preds/conditions/, scores it with
 eval.metrics.metrics_from_file (accuracy, NLL, Brier, ECE with the protocol's
 15 equal-mass bins), and writes:
 
-    results/tables/calibration_per_file.csv   one row per prediction file
+    results/tables/calibration_per_file.csv   one row per prediction file,
+                                              with its git commit and config
+                                              version so numbers trace back
     results/tables/calibration_summary.csv    mean and std over seeds, per
                                               variant and condition, plus an
                                               "mnistc_mean" row per variant
@@ -25,11 +27,13 @@ Nothing is trained or predicted here.
 
 import argparse
 import csv
-import re
+import json
 import statistics
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
+
+import numpy as np
 
 from baselines.base import load_protocol
 from eval.metrics import metrics_from_file
@@ -52,20 +56,39 @@ def variant_name(path: Path, seed: int, condition: str) -> str:
     return stem.replace(marker, "", 1)
 
 
+def file_identity(path: Path) -> Tuple[str, int, str]:
+    """(variant, seed, condition) from the file's metadata, without scoring it."""
+    with np.load(path, allow_pickle=False) as data:
+        metadata = json.loads(str(data["metadata"]))
+    seed, condition = int(metadata["seed"]), str(metadata["condition"])
+    return variant_name(path, seed, condition), seed, condition
+
+
+def prediction_files(preds_dir: Path) -> List[Path]:
+    """Every finished prediction file. Leftover *.tmp.npz from an interrupted write are skipped."""
+    return sorted(p for p in preds_dir.glob("*.npz") if not p.name.endswith(".tmp.npz"))
+
+
 def score_files(preds_dir: Path, protocol: dict, variants: Optional[Sequence[str]] = None) -> List[Dict]:
-    rows = []
-    files = sorted(preds_dir.glob("*.npz"))
+    files = prediction_files(preds_dir)
     if not files:
         raise SystemExit(f"no prediction files in {preds_dir}")
+    rows = []
     for path in files:
-        result = metrics_from_file(path, protocol=protocol)
-        seed, condition = int(result["seed"]), str(result["condition"])
-        variant = variant_name(path, seed, condition)
+        variant, seed, condition = file_identity(path)
         if variants and variant not in variants:
             continue
-        rows.append({"variant": variant, "seed": seed, "condition": condition,
-                     **{m: float(result[m]) for m in METRICS}, "n": int(result["n"]),
-                     "file": path.name})
+        result = metrics_from_file(path, protocol=protocol)
+        rows.append({
+            "variant": variant, "seed": seed, "condition": condition,
+            **{m: float(result[m]) for m in METRICS}, "n": int(result["n"]),
+            "config_version": result.get("config_version", ""),
+            "git_commit": result.get("git_commit", ""),
+            "file": path.name,
+        })
+    if not rows:
+        found = sorted({file_identity(p)[0] for p in files})
+        raise SystemExit(f"--variants {list(variants)} matched no files; variants found: {found}")
     return rows
 
 
@@ -106,6 +129,8 @@ def summarize(rows: List[Dict], expected_corruptions: int) -> List[Dict]:
 
 
 def write_csv(path: Path, rows: List[Dict]) -> None:
+    if not rows:
+        raise SystemExit(f"nothing to write to {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
