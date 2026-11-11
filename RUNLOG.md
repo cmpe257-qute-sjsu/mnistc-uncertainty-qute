@@ -29,6 +29,7 @@ Status values: `ok`, `failed`, `superseded`.
 | 2026-11-07 | Anusha | base_eval | BASE | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/base_seed*_{condition}.npz` | ok | 48 files, 16 conditions each, labels attached, via eval/predict_conditions.py. Uploaded to Drive predictions/ (preds_base.zip) |
 | 2026-11-07 | Anusha | mc_dropout_eval | MC Dropout | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/mc_dropout_seed*_{condition}_passes{2,20}.npz` | ok | 96 files (2-pass headline + 20-pass reference), 16 conditions each, labels attached, via eval/predict_conditions.py. Uploaded to Drive predictions/ (preds_mc_dropout_passes2.zip, preds_mc_dropout_passes20.zip) |
 | 2026-11-07 | Anusha | deep_ensemble_eval | Deep ensemble | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/deep_ensemble_seed*_{condition}_members{2,5}.npz` | ok | 96 files (2-member headline + 5-member reference), 16 conditions each, labels attached, via eval/predict_conditions.py. Uploaded to Drive predictions/ (preds_deep_ensemble_members2.zip, preds_deep_ensemble_members5.zip) |
+| 2026-11-09 | Smitha | calibration_all | all 7 variants | 11, 22, 33 | 0186f43 | 5 | `results/tables/calibration_summary.csv`, `calibration_per_file.csv` | ok | 336 files scored with eval.metrics (15 equal-mass ECE bins). MNIST-C ECE at K=2: QUTE 0.226 ± 0.045, DE-2 0.265, MC-2 0.271, BASE 0.282 |
 
 ## Environment fingerprints (Step 1)
 
