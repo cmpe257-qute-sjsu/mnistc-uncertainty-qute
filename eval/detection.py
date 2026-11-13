@@ -18,6 +18,8 @@ def window_means(values, size=WINDOW_SIZE):
 
     if values.ndim != 1:
         raise ValueError("Expected a one-dimensional array")
+    if size <= 0:
+        raise ValueError("Window size must be positive")
     if len(values) < size:
         raise ValueError("Not enough samples for one window")
 
@@ -34,7 +36,9 @@ def load_predictions(path):
         confidence = np.asarray(data["confidence"])
 
     if probs.shape != (10000, 10):
-        raise ValueError(f"{path}: unexpected probs shape {probs.shape}")
+        raise ValueError(
+            f"{path}: unexpected probs shape {probs.shape}"
+        )
 
     if ids.shape != (10000,) or labels.shape != (10000,):
         raise ValueError(f"{path}: invalid IDs or labels")
@@ -46,14 +50,22 @@ def load_predictions(path):
     ids = ids[order]
 
     if not np.array_equal(ids, np.arange(10000)):
-        raise ValueError(f"{path}: missing or duplicate sample IDs")
+        raise ValueError(
+            f"{path}: missing or duplicate sample IDs"
+        )
 
     probs = probs[order]
     labels = labels[order]
     confidence = confidence[order]
 
-    if not np.allclose(confidence, probs.max(axis=1), atol=1e-5):
-        raise ValueError(f"{path}: confidence does not match probs")
+    if not np.allclose(
+        confidence,
+        probs.max(axis=1),
+        atol=1e-5,
+    ):
+        raise ValueError(
+            f"{path}: confidence does not match probs"
+        )
 
     return {
         "ids": ids,
@@ -97,6 +109,7 @@ def evaluate_detection(clean, corrupted):
     correct = np.concatenate(
         (clean_correct, corrupted_correct)
     )
+
     confidence = np.concatenate(
         (clean["confidence"], corrupted["confidence"])
     )
@@ -104,17 +117,22 @@ def evaluate_detection(clean, corrupted):
     window_accuracy = window_means(correct)
     mean_confidence = window_means(confidence)
 
+    # Degradation events use a strict threshold.
     events = window_accuracy < threshold
     positives = int(events.sum())
 
-    # Low confidence represents stronger degradation evidence.
+    # Low confidence means stronger degradation evidence.
     risk_score = 1.0 - mean_confidence
 
+    # Primary AUPRC: sklearn Average Precision.
     if positives == 0:
         ap = None
     else:
-        ap = float(average_precision_score(events, risk_score))
+        ap = float(
+            average_precision_score(events, risk_score)
+        )
 
+    # Evaluate the 11-point rho sweep.
     sweep = []
 
     for rho in np.linspace(0.0, 1.0, 11):
@@ -123,8 +141,17 @@ def evaluate_detection(clean, corrupted):
         tp = int(np.sum(alarms & events))
         fp = int(np.sum(alarms & ~events))
 
-        precision = tp / (tp + fp) if tp + fp else None
-        recall = tp / positives if positives else None
+        precision = (
+            tp / (tp + fp)
+            if tp + fp
+            else None
+        )
+
+        recall = (
+            tp / positives
+            if positives
+            else None
+        )
 
         sweep.append({
             "rho": round(float(rho), 1),
@@ -133,6 +160,31 @@ def evaluate_detection(clean, corrupted):
             "recall": recall,
         })
 
+    # Secondary AUPRC: area from the 11 rho-sweep points.
+    # Skip undefined precision values (no alarms).
+    if positives == 0:
+        sweep_auprc = None
+    else:
+        valid_points = sorted(
+            (
+                (point["recall"], point["precision"])
+                for point in sweep
+                if point["precision"] is not None
+                and point["recall"] is not None
+            ),
+            key=lambda item: item[0],
+        )
+
+        sweep_auprc = 0.0
+        previous_recall = 0.0
+
+        for recall, precision in valid_points:
+            delta_recall = recall - previous_recall
+            sweep_auprc += precision * delta_recall
+            previous_recall = recall
+
+        sweep_auprc = float(sweep_auprc)
+
     return {
         "clean_reference_mean": mu,
         "clean_reference_std": sigma,
@@ -140,28 +192,35 @@ def evaluate_detection(clean, corrupted):
         "total_windows": len(events),
         "degradation_events": positives,
         "average_precision": ap,
+        "sweep_auprc": sweep_auprc,
         "rho_sweep": sweep,
     }
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Evaluate accuracy-drop detection and AUPRC."
+    )
+
     parser.add_argument(
         "--clean",
         required=True,
         help="Path to clean condition NPZ",
     )
+
     parser.add_argument(
         "--corrupted",
         required=True,
         help="Path to corrupted condition NPZ",
     )
+
     args = parser.parse_args()
 
     clean = load_predictions(Path(args.clean))
     corrupted = load_predictions(Path(args.corrupted))
 
     result = evaluate_detection(clean, corrupted)
+
     print(json.dumps(result, indent=2))
 
 
