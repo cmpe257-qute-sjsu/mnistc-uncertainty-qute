@@ -1,0 +1,16 @@
+corruption,severity
+translate,mild
+shear,mild
+shot_noise,mild
+spatter,mild
+glass_blur,moderate
+motion_blur,moderate
+scale,moderate
+rotate,moderate
+dotted_line,moderate
+zigzag,moderate
+impulse_noise,severe
+fog,severe
+brightness,severe
+canny_edges,severe
+stripe,severe
