@@ -1,0 +1,90 @@
+# SMALL-CNN VARIANT of config v5 (exploratory extension, see RUNLOG).
+# Identical to configs/base.yaml v5 except config_version and the model
+# channels/parameters, chosen by experiments/width_sweep.py: BASE seed 11,
+# final-epoch validation accuracy closest to 0.91.
+# Sweep (val acc): 8-16-32-32: 0.9682, 6-12-24-24: 0.9621, 4-8-16-16: 0.9554, 3-6-12-12: 0.9400, 2-4-8-8: 0.9142
+# Run it in a separate git worktree with this file copied over configs/base.yaml.
+
+# CMPE 257 QUTE project — frozen protocol
+#
+# Settings marked [paper] come from Ghanathe & Wilton, ICML 2025 (PMLR 267).
+# Settings marked [ours] are team defaults and must be named as deviations in the report.
+# Do not override these in individual training scripts. Change here, bump version, tell the team.
+
+config_version: 51
+
+data:
+  dataset: mnist                      # [paper] 4-layer CNN on MNIST
+  train_size: 50000                   # [ours] paper does not specify a validation split
+  val_size: 10000                     # [ours]
+  split_seed: 0                       # [ours] fixed so all three of us get identical indices
+  normalize_from: train_only          # statistics computed on the training subset only
+  augmentation:                       # [paper] light random augmentation, training only
+    random_rotation_degrees: 10
+    random_crop_padding: 2
+  corruptions_expected: 15            # [paper] identity set is NOT one of the 15
+
+training:
+  epochs: 20                          # [paper]
+  batch_size: 256                     # [paper]
+  optimizer: adam                     # [paper]
+  learning_rate: 0.001                # [paper]
+  momentum: 0.9                       # [paper]
+  lr_decay_per_epoch: 0.99            # [paper]
+  seeds: [11, 22, 33]                 # [ours] paper reports 3 runs but not which seeds
+  checkpoint_selection: final_epoch   # [paper] fixed 20 epochs, keep the final weights; val NLL logged only
+  data_order: fixed_by_split_seed     # [ours] model seed does not change minibatch order
+  num_workers: 0                      # [ours] fit_cnn reseeds aug RNG from split_seed; if >0, use baselines.base.worker_init_fn
+
+qute:
+  K: 2                                # [paper] bounded by depth; EEs after conv layers 1 and 2
+  early_exit_after_layers: [1, 2]     # [paper]
+  w_ev_0: 3.0                         # [paper] tested {2,3,4,5}, chose 3
+  w_ev_delta: 0.5                     # [paper] w_EV(k) = w_EV(k-1) + delta -> [3.0, 3.5]
+  tau: [0.25, 0.5]                    # [ours] early-exit loss weights; paper cites Kaya et al. 2019, no values  
+  transfer_layer_type: depthwise_conv # [paper] h_phi and h_theta are single depthwise convs
+  pointwise_before_theta: true        # [paper] dimension matching at the early exit
+  freeze_base_last_fraction: 0.10     # [paper] last 10% of epochs -> epochs 19 and 20
+  transfer_during_freeze: true        # [paper] transfer CONTINUES through the frozen stage
+  drop_original_output_block: true    # [paper] discarded at inference, it is overconfident
+
+model:
+  # [ours] The paper gives "4-layer CNN" for MNIST but not the channel widths.
+  # These are our choice and must be named as a deviation in the report.
+  # See models/README.md for what to do once BASE clean accuracy is known.
+  channels: [2, 4, 8, 8]
+  kernel_size: 3
+  pool_after: [0, 1]                  # conv indices; also the EE / dropout locations
+  use_batchnorm: false                # [ours] keeps the freeze stage free of buffer questions
+  head: gap                           # global average pool, then linear
+  model_version: 1
+  parameters: 1066                   # recorded so a mismatch is visible
+
+baselines:
+  mc_dropout:
+    rate: 0.1                         # [paper] MNIST
+    locations: early_exit_locations   # [paper] same placement as the EEs, for fairness
+    passes_headline: 2                # [paper] passes = K
+    passes_reference: 20              # [ours] cost-unconstrained reference run
+    headline_is_prefix_of_reference: true   # 2-pass file is the first 2 of the 20; this creates dependence
+  deep_ensemble:
+    members_headline: 2               # [paper] members = K
+    members_reference: 5              # [ours] cost-unconstrained reference run
+    headline_is_subset_of_reference: true   # declare this, it creates dependence
+
+evaluation:
+  window_size: 100                    # [paper] m = 100
+  window_stride: 1                    # [ours] paper does not state the stride; moving average over past 100
+  score: mean_confidence              # [paper] max class probability; NOT entropy
+  rho_sweep: {start: 0.0, stop: 1.0, step: 0.1}   # [paper]
+  event_rule: acc_below_mu_minus_3sigma           # [paper] clean reference, 3 std devs
+  pr_area_estimator: average_precision            # [ours] primary; paper's 11-point rho sweep reported separately
+  undefined_auprc_policy: mark_undefined          # never substitute 0 or 1
+  ece_bins: 15                        # [ours]
+  ece_binning: equal_mass             # [ours] DEVIATION: paper uses equal-width bins
+  metrics: [accuracy, nll, brier, ece, auprc]
+
+notes:
+  paper_clean_accuracy_reference: 0.91   # if ours is 98-99%, our CNN is bigger than theirs
+  paper_mnistc_auprc: {qute: 0.63, deep_ensemble: 0.55, base: 0.54, mc_dropout: 0.45}
+  paper_mnist_nll: {qute: 0.199, deep_ensemble: 0.227}
