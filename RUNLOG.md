@@ -37,6 +37,7 @@ Status values: `ok`, `failed`, `superseded`.
 | 2026-11-14 | Smitha | small_cnn qute | QUTE | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/` | ok | With weight transfer |
 | 2026-11-14 | Smitha | small_cnn qute_no_transfer | QUTE (ablation) | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/` | ok | Transfer off |
 | 2026-11-14 | Smitha | small_cnn evaluation | All | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/tables/`, `results/small_cnn/detection/` | ok | predict_conditions, summarize_calibration, run_detection_all (first run failed: scikit-learn missing from local venv; installed 1.6.1 as pinned, reran). MNIST-C mean ECE: QUTE 0.173, DE-2 0.190, MC-2 0.219, BASE 0.262. AP: DE-2 0.786, QUTE 0.719, MC-2 0.657, BASE 0.602 |
+| 2026-11-14 | Outcome of exploratory extension (4): prediction NOT supported. Absolute AUPRC did fall toward the paper's (small-CNN QUTE 11-point 0.626 vs paper 0.63), but QUTE's lead over DE-2 did not grow: it reversed further (AP 0.719 vs 0.786, was 0.846 vs 0.854). QUTE keeps the lowest MNIST-C ECE (0.173 vs DE-2 0.190) but loses NLL and Brier narrowly. Base clean accuracy varied by seed (0.92 / 0.90 / 0.80), so gaps await the paired significance test | Recording the result against the pre-stated prediction, as for the pre-registered extensions | Yes, labelled exploratory |
 
 ## Environment fingerprints (Step 1)
 
