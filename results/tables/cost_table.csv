@@ -1,0 +1,7 @@
+variant,config_version,channels,deployed_params,fp32_kib,forward_passes,ms_per_1000_median,ms_per_1000_min,ms_per_1000_max,time_vs_base,batch_size,threads,repeats,warmup_batches,n_images,torch,cpu,git_commit,date
+base,5,8-16-32-32,15466,60.4,1,119.23,119.15,119.34,1.0,256,1,5,5,10000,2.15.0,Apple M1,990b6ab,2026-11-14
+mc_dropout_passes2,5,8-16-32-32,15466,60.4,2,266.96,266.77,269.33,2.24,256,1,5,5,10000,2.15.0,Apple M1,990b6ab,2026-11-14
+mc_dropout_passes20,5,8-16-32-32,15466,60.4,20,2669.88,2667.68,2680.08,22.39,256,1,5,5,10000,2.15.0,Apple M1,990b6ab,2026-11-14
+deep_ensemble_members2,5,8-16-32-32,30932,120.8,2,238.51,238.32,245.88,2.0,256,1,5,5,10000,2.15.0,Apple M1,990b6ab,2026-11-14
+deep_ensemble_members5,5,8-16-32-32,77330,302.1,5,596.34,595.92,602.47,5.0,256,1,5,5,10000,2.15.0,Apple M1,990b6ab,2026-11-14
+qute,5,8-16-32-32,16436,64.2,1,134.7,134.65,134.92,1.13,256,1,5,5,10000,2.15.0,Apple M1,990b6ab,2026-11-14
