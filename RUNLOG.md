@@ -31,6 +31,12 @@ Status values: `ok`, `failed`, `superseded`.
 | 2026-11-07 | Anusha | deep_ensemble_eval | Deep ensemble | 11, 22, 33 | e68df15 | 5 | `results/preds/conditions/deep_ensemble_seed*_{condition}_members{2,5}.npz` | ok | 96 files (2-member headline + 5-member reference), 16 conditions each, labels attached, via eval/predict_conditions.py. Uploaded to Drive predictions/ (preds_deep_ensemble_members2.zip, preds_deep_ensemble_members5.zip) |
 | 2026-11-09 | Smitha | calibration_all | all 7 variants | 11, 22, 33 | 0186f43 | 5 | `results/tables/calibration_summary.csv`, `calibration_per_file.csv` | ok | 336 files scored with eval.metrics (15 equal-mass ECE bins). MNIST-C ECE at K=2: QUTE 0.226 ± 0.045, DE-2 0.265, MC-2 0.271, BASE 0.282 |
 | 2026-11-13 | Smitha | width_sweep | BASE | 11 | ffa48c2 | 5 (channels only) | `results/tables/width_sweep.csv`, `checkpoints/width_sweep/` | ok | Val acc: 8-16-32-32 0.9682, 6-12-24-24 0.9621, 4-8-16-16 0.9554, 3-6-12-12 0.9400, 2-4-8-8 0.9142. Chosen [2,4,8,8] (1,066 params) by the pre-stated rule; wrote `configs/small_cnn.yaml` (config_version 51) |
+| 2026-11-13 | Smitha | small_cnn base | BASE | 11, 22, 33 | 10a76fa | config v51 (small_cnn.yaml), worktree | `results/small_cnn/` | ok | Clean test acc: 0.9199 / 0.8976 / 0.7991 (seed 33 well below the 0.91 target; kept, as pre-registered) |
+| 2026-11-13 | Smitha | small_cnn mc_dropout | MC Dropout | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/` | ok | Passes 2 and 20 |
+| 2026-11-13 | Smitha | small_cnn ensemble | Deep ensemble | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/` | ok | Members 2 and 5 |
+| 2026-11-14 | Smitha | small_cnn qute | QUTE | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/` | ok | With weight transfer |
+| 2026-11-14 | Smitha | small_cnn qute_no_transfer | QUTE (ablation) | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/` | ok | Transfer off |
+| 2026-11-14 | Smitha | small_cnn evaluation | All | 11, 22, 33 | 10a76fa | config v51 | `results/small_cnn/tables/`, `results/small_cnn/detection/` | ok | predict_conditions, summarize_calibration, run_detection_all (first run failed: scikit-learn missing from local venv; installed 1.6.1 as pinned, reran). MNIST-C mean ECE: QUTE 0.173, DE-2 0.190, MC-2 0.219, BASE 0.262. AP: DE-2 0.786, QUTE 0.719, MC-2 0.657, BASE 0.602 |
 
 ## Environment fingerprints (Step 1)
 
