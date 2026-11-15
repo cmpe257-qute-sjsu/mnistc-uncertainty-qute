@@ -2,8 +2,9 @@
 
     python -m eval.cost_table
     python -m eval.cost_table --threads 1 --repeats 5
-    python -m eval.cost_table --config configs/small_cnn.yaml --variants base \\
-        --out results/small_cnn/tables/cost_table.csv          # exploratory small-CNN row
+    python -m eval.cost_table --config configs/small_cnn.yaml \\
+        --variants base mc_dropout_passes2 deep_ensemble_members2 qute \\
+        --out results/small_cnn/tables/cost_table.csv          # exploratory small-CNN rows
 
 Pre-registered extension (2), RUNLOG 2026-11-11. For each deployed variant:
 
