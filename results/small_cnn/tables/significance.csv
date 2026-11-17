@@ -1,0 +1,13 @@
+comparison,other_variant,metric,n_pairs,n_undefined_dropped,mean_diff,ci_low,ci_high,excludes_zero,favours,pairs_favouring_qute,seed11_mean_diff,seed22_mean_diff,seed33_mean_diff,n_resamples,bootstrap_seed
+QUTE - DE-2,deep_ensemble_members2,AUPRC (AP),45,0,-0.0669,-0.14,0.0025,False,deep_ensemble_members2,16,0.017,-0.1182,-0.0996,10000,0
+QUTE - QUTE without transfer,qute_no_transfer,AUPRC (AP),45,0,-0.0194,-0.1081,0.0689,False,qute_no_transfer,20,0.1037,-0.1783,0.0164,10000,0
+QUTE - BASE,base,AUPRC (AP),45,0,0.1164,0.0385,0.2019,True,qute,30,0.1207,0.0956,0.1329,10000,0
+QUTE - MC-2,mc_dropout_passes2,AUPRC (AP),45,0,0.062,-0.0138,0.1376,False,qute,33,0.0947,0.1061,-0.0149,10000,0
+QUTE - DE-2,deep_ensemble_members2,ECE,45,0,-0.0166,-0.0505,0.0193,False,qute,30,-0.0498,-0.0646,0.0644,10000,0
+QUTE - QUTE without transfer,qute_no_transfer,ECE,45,0,-0.0266,-0.0675,0.0126,False,qute,25,-0.0784,-0.0484,0.047,10000,0
+QUTE - BASE,base,ECE,45,0,-0.0885,-0.1425,-0.0395,True,qute,27,-0.1165,-0.1332,-0.0158,10000,0
+QUTE - MC-2,mc_dropout_passes2,ECE,45,0,-0.0459,-0.0832,-0.0113,True,qute,29,-0.0578,-0.1032,0.0234,10000,0
+QUTE - DE-2,deep_ensemble_members2,"AUPRC (11-point, secondary)",45,0,-0.072,-0.1393,-0.0059,True,deep_ensemble_members2,16,0.0164,-0.1479,-0.0844,10000,0
+QUTE - QUTE without transfer,qute_no_transfer,"AUPRC (11-point, secondary)",45,0,-0.0202,-0.0972,0.0526,False,qute_no_transfer,23,0.1115,-0.1816,0.0095,10000,0
+QUTE - BASE,base,"AUPRC (11-point, secondary)",45,0,0.1001,0.0324,0.1721,True,qute,30,0.1296,0.0451,0.1256,10000,0
+QUTE - MC-2,mc_dropout_passes2,"AUPRC (11-point, secondary)",45,0,0.0788,0.0102,0.1502,True,qute,32,0.0957,0.0613,0.0795,10000,0
