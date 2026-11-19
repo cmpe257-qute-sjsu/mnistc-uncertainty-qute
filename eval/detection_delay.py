@@ -190,7 +190,7 @@ def main():
     parser.add_argument(
         "--severity-map",
         type=Path,
-        default=None,
+        default=Path("data/manifests/corruption_severity.csv"),
         help="Optional CSV with corruption,severity columns",
     )
 
