@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QUTE demo · CMPE 257</title>
+<style>
+  :root {
+    --bg: #F7F6F2; --card: #FDFDFB; --line: #E2E4E8; --ink: #14213D; --body: #4A5568; --muted: #6B7280;
+    --blue: #2a78d6; --accent: #C76B1E; --accent-bg: #FBEBDA; --event: rgba(227,73,72,0.13); --grid: #E9EAEE;
+    --seed11: #2a78d6; --seed22: #eb6834; --seed33: #1baf7a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--body); font: 18px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+  header { display: flex; align-items: center; gap: 24px; padding: 18px 32px; border-bottom: 1px solid var(--line); background: var(--card); }
+  header h1 { margin: 0; font-size: 22px; color: var(--ink); font-weight: 650; }
+  nav { display: flex; gap: 8px; margin-left: auto; }
+  nav button { font: inherit; font-size: 17px; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+  nav button[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  nav button small { opacity: .7; margin-left: 6px; }
+  main { padding: 24px 32px 40px; max-width: 1500px; margin: 0 auto; }
+  section[hidden] { display: none; }
+  .lead { font-size: 22px; color: var(--ink); margin: 0 0 16px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-bottom: 16px; }
+  .controls label { display: flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 600; }
+  select, .controls button { font: inherit; font-size: 17px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
+  .controls button { cursor: pointer; padding: 6px 16px; }
+  .controls button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  input[type=range] { width: 280px; accent-color: var(--accent); }
+  .rho-value { font-variant-numeric: tabular-nums; min-width: 3.2em; color: var(--accent); font-weight: 700; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; }
+  .panel-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+  .panel-head h3 { margin: 0; font-size: 20px; color: var(--ink); }
+  .stats { display: flex; gap: 22px; flex-wrap: wrap; font-size: 16px; }
+  .stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .stack { display: grid; gap: 14px; }
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 15px; color: var(--body); margin: 4px 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { display: inline-block; width: 22px; height: 0; border-top: 3px solid; }
+  .sw.dash { border-top-style: dashed; }
+  .sw.box { width: 16px; height: 14px; border: none; border-radius: 3px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { font-family: inherit; }
+  .axis text { fill: var(--muted); font-size: 13px; }
+  .strip { display: flex; gap: 10px; flex-wrap: wrap; }
+  .digit { text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .digit canvas { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--line); background: #000; display: block; }
+  .digit .wrong { color: #c0392b; font-weight: 700; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .grid4 .card.hl { border: 2px solid var(--accent); }
+  .two { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; align-items: start; }
+  .note { font-size: 15px; color: var(--muted); margin-top: 10px; }
+  #tip { position: fixed; pointer-events: none; background: var(--ink); color: #fff; font-size: 14px; padding: 6px 10px; border-radius: 6px; opacity: 0; transition: opacity .08s; z-index: 10; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .empty { padding: 60px; text-align: center; font-size: 20px; color: var(--ink); }
+  details { margin-top: 12px; font-size: 15px; }
+  table.data { border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  table.data td, table.data th { padding: 3px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+  table.data td:first-child, table.data th:first-child { text-align: left; }
+</style>
+</head>
+<body>
+<header>
+  <h1>QUTE on MNIST-C · live demo</h1>
+  <nav role="tablist">
+    <button role="tab" data-tab="detect" aria-selected="true">Detection <small>Abirami · 1</small></button>
+    <button role="tab" data-tab="calib" aria-selected="false">Calibration <small>Anusha · 2</small></button>
+    <button role="tab" data-tab="ablate" aria-selected="false">Ablation <small>Smitha · 3</small></button>
+  </nav>
+</header>
+<main id="app"></main>
+<div id="tip"></div>
+<script src="demo_data.js"></script>
+<script>
+"use strict";
+const D = window.DEMO_DATA;
+const app = document.getElementById("app");
+const tip = document.getElementById("tip");
+const NS = "http://www.w3.org/2000/svg";
+const pretty = s => s === "clean" ? "Clean" : s.replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+const fmt = (v, d = 3) => v == null ? "—" : Number(v).toFixed(d);
+const pct = v => v == null ? "—" : (100 * v).toFixed(1) + "%";
+const mean = a => { const v = a.filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+
+function el(tag, attrs = {}, parent) {
+  const isSvg = ["svg","g","line","path","rect","circle","text","polyline"].includes(tag);
+  const n = isSvg ? document.createElementNS(NS, tag) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "text") n.textContent = v; else if (k === "html") n.innerHTML = v; else n.setAttribute(k, v);
+  }
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function showTip(evt, html) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = (evt.clientX + 14) + "px"; tip.style.top = (evt.clientY + 14) + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+function select(options, value, onChange, labels) {
+  const s = el("select");
+  options.forEach(o => el("option", { value: o, text: labels ? labels(o) : o }, s));
+  s.value = value; s.addEventListener("change", () => onChange(s.value));
+  return s;
+}
+
+if (!D) {
+  app.innerHTML = '<div class="empty">No data yet. From the repo root run <code>python -m eval.export_demo_data</code>, then reload this page.</div>';
+  throw new Error("demo_data.js missing");
+}
+
+/* ---------------------------------------------------------------- tabs */
+const sections = {};
+for (const id of ["detect", "calib", "ablate"]) sections[id] = el("section", { id, role: "tabpanel" }, app);
+const tabs = [...document.querySelectorAll("nav button")];
+function openTab(id) {
+  tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.tab === id));
+  Object.entries(sections).forEach(([k, s]) => s.hidden = k !== id);
+}
+tabs.forEach(b => b.addEventListener("click", () => openTab(b.dataset.tab)));
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "SELECT") return;
+  const map = { "1": "detect", "2": "calib", "3": "ablate" };
+  if (map[e.key]) openTab(map[e.key]);
+});
+
+/* ------------------------------------------------- 1 · detection stream */
+const det = { corruption: "fog", top: "QUTE", bottom: "BASE", rhoIndex: 70, progress: 1, timer: null };
+(function buildDetection() {
+  const s = sections.detect;
+  el("p", { class: "lead", text: "10,000 clean digits, then 10,000 corrupted ones. No labels at test time: can falling confidence tell us accuracy dropped?" }, s);
+  const c = el("div", { class: "controls" }, s);
+  const l1 = el("label", { text: "Corruption" }, c);
+  l1.appendChild(select(D.corruptions, det.corruption, v => { det.corruption = v; renderDetection(); }, pretty));
+  const l2 = el("label", { text: "Alarm when confidence < ρ" }, c);
+  const slider = el("input", { type: "range", min: 0, max: D.rho_grid.length - 1, value: det.rhoIndex }, l2);
+  const rv = el("span", { class: "rho-value" }, l2);
+  slider.addEventListener("input", () => { det.rhoIndex = +slider.value; renderDetection(); });
+  det.rv = rv;
+  const play = el("button", { class: "primary", text: "▶ Play stream" }, c);
+  play.addEventListener("click", () => {
+    clearInterval(det.timer); det.progress = 0;
+    det.timer = setInterval(() => { det.progress = Math.min(1, det.progress + 0.01); renderDetection(); if (det.progress >= 1) clearInterval(det.timer); }, 50);
+  });
+  const lg = el("div", { class: "legend" }, s);
+  lg.innerHTML = '<span><i class="sw" style="border-color:var(--ink)"></i>Window accuracy (needs labels, shown for reference)</span>' +
+    '<span><i class="sw" style="border-color:var(--blue)"></i>Window mean confidence</span>' +
+    '<span><i class="sw dash" style="border-color:#8a8f99"></i>Event threshold μ − 3σ</span>' +
+    '<span><i class="sw dash" style="border-color:var(--accent)"></i>ρ</span>' +
+    '<span><i class="sw box" style="background:var(--event)"></i>Accuracy-drop event</span>' +
+    '<span><i class="sw box" style="background:var(--accent)"></i>Alarm</span>';
+  det.panels = el("div", { class: "stack" }, s);
+  det.strip = el("div", { class: "card", style: "margin-top:14px" }, s);
+  el("p", { class: "note", text: `Seed ${D.display_seed}. Windows of ${D.window_size}, stride 1; the chart draws every ${D.plot_every}th window, the numbers use all of them. AP is over every ρ (the score in our tables).` }, s);
+})();
+
+function detectionPanel(parent, slot) {
+  const card = el("div", { class: "card" }, parent);
+  const head = el("div", { class: "panel-head" }, card);
+  head.appendChild(select(D.methods, det[slot], v => { det[slot] = v; renderDetection(); }));
+  const r = D.detection[det[slot]][det.corruption];
+  const i = det.rhoIndex, rho = D.rho_grid[i];
+  const stats = el("div", { class: "stats" }, head);
+  if (det.progress < 1) {
+    const k = Math.max(0, Math.round(r.window_start.length * det.progress) - 1);
+    const alarm = r.mean_confidence[k] < rho;
+    stats.innerHTML = `<span>Window <b>${r.window_start[k].toLocaleString()}</b></span><span>Confidence <b>${fmt(r.mean_confidence[k])}</b></span>` +
+      `<span style="color:${alarm ? "var(--accent)" : "var(--muted)"};font-weight:700">${alarm ? "ALARM" : "no alarm"}</span>`;
+  } else stats.innerHTML =`<span>AP <b>${fmt(r.ap)}</b></span><span>Precision <b>${pct(r.precision[i])}</b></span>` +
+    `<span>Recall <b>${pct(r.recall[i])}</b></span><span>False alarms on clean <b>${pct(r.clean_false_alarm_rate[i])}</b></span>` +
+    `<span>First alarm <b>${r.delay[i] == null ? "none" : r.delay[i] + " samples after switch"}</b></span>`;
+
+  const W = 1400, H = 250, m = { l: 48, r: 12, t: 10, b: 30 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, card);
+  const total = 2 * 10000 - D.window_size + 1;
+  const x = v => m.l + (v / total) * (W - m.l - m.r);
+  const y = v => m.t + (1 - v) * (H - m.t - m.b);
+  const ax = el("g", { class: "axis" }, svg);
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: "var(--grid)" }, ax);
+    el("text", { x: m.l - 8, y: y(t) + 4, "text-anchor": "end", text: t.toFixed(2) }, ax);
+  }
+  for (const t of [0, 5000, 10000, 15000, 19901]) el("text", { x: x(t), y: H - 8, "text-anchor": "middle", text: t === 19901 ? "window 19,901" : t.toLocaleString() }, ax);
+  el("line", { x1: x(10000 - D.window_size / 2), x2: x(10000 - D.window_size / 2), y1: m.t, y2: H - m.b, stroke: "#9aa0aa", "stroke-width": 1.5 }, svg);
+  el("text", { x: x(10000) + 6, y: m.t + 14, fill: "var(--muted)", "font-size": 13, text: `switch to ${pretty(det.corruption)}` }, svg);
+
+  const n = Math.max(1, Math.round(r.window_start.length * det.progress));
+  const starts = r.window_start.slice(0, n);
+  // event bands and alarm ticks
+  // Merge consecutive flagged windows into runs so bands draw without seams.
+  const runs = flag => {
+    const out = []; let a = null;
+    starts.forEach((st, k) => { if (flag(k)) { if (a == null) a = st; } else if (a != null) { out.push([a, st]); a = null; } });
+    if (a != null) out.push([a, starts[starts.length - 1] + D.plot_every]);
+    return out;
+  };
+  runs(k => r.window_accuracy[k] < r.threshold).forEach(([a, b]) =>
+    el("rect", { x: x(a), y: m.t, width: Math.max(1.5, x(b) - x(a)), height: H - m.t - m.b, fill: "var(--event)" }, svg));
+  runs(k => r.mean_confidence[k] < rho).forEach(([a, b]) =>
+    el("rect", { x: x(a), y: H - m.b - 8, width: Math.max(1.5, x(b) - x(a)), height: 8, fill: "var(--accent)" }, svg));
+  el("line", { x1: m.l, x2: W - m.r, y1: y(r.threshold), y2: y(r.threshold), stroke: "#8a8f99", "stroke-dasharray": "6 5", "stroke-width": 1.5 }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: y(rho), y2: y(rho), stroke: "var(--accent)", "stroke-dasharray": "8 5", "stroke-width": 2 }, svg);
+  const pts = arr => starts.map((st, k) => `${x(st).toFixed(1)},${y(arr[k]).toFixed(1)}`).join(" ");
+  el("polyline", { points: pts(r.window_accuracy), fill: "none", stroke: "var(--ink)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  el("polyline", { points: pts(r.mean_confidence), fill: "none", stroke: "var(--blue)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+
+  const cross = el("line", { y1: m.t, y2: H - m.b, stroke: "#9aa0aa", opacity: 0 }, svg);
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+  hit.addEventListener("mousemove", e => {
+    const b = svg.getBoundingClientRect();
+    const px = (e.clientX - b.left) * W / b.width;
+    const k = Math.max(0, Math.min(n - 1, Math.round(((px - m.l) / (W - m.l - m.r)) * total / D.plot_every)));
+    cross.setAttribute("x1", x(starts[k])); cross.setAttribute("x2", x(starts[k])); cross.setAttribute("opacity", 1);
+    showTip(e, `Window ${starts[k].toLocaleString()}<br>Accuracy ${fmt(r.window_accuracy[k])}<br>Confidence ${fmt(r.mean_confidence[k])}` +
+      (r.mean_confidence[k] < rho ? "<br><b>Alarm</b>" : ""));
+  });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
+}
+
+function drawDigit(b64, canvas) {
+  const bytes = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+  const ctx = canvas.getContext("2d"), img = ctx.createImageData(28, 28);
+  bytes.forEach((v, k) => { img.data.set([v, v, v, 255], 4 * k); });
+  ctx.putImageData(img, 0, 0);
+}
+
+function renderStrip() {
+  const s = det.strip; s.innerHTML = "";
+  if (!D.images) { s.hidden = true; return; }
+  const head = el("div", { class: "panel-head" }, s);
+  el("h3", { text: `What the models see after the switch: ${pretty(det.corruption)}` }, head);
+  const rows = [["clean", "Before (clean)"], [det.corruption, "After"]];
+  for (const [cond, label] of rows) {
+    const e = D.images.conditions[cond]; if (!e) continue;
+    el("div", { class: "note", text: `${label} · predictions shown as ${det.top} / ${det.bottom}, with confidence` }, s);
+    const strip = el("div", { class: "strip" }, s);
+    e.images.forEach((b64, k) => {
+      const d = el("div", { class: "digit" }, strip);
+      const cv = el("canvas", { width: 28, height: 28 }, d); drawDigit(b64, cv);
+      for (const name of [det.top, det.bottom]) {
+        const p = e.methods[name]; if (!p) continue;
+        const ok = p.pred[k] === e.labels[k];
+        el("div", { html: `<span class="${ok ? "" : "wrong"}">${p.pred[k]}</span> · ${fmt(p.conf[k], 2)}` }, d);
+      }
+    });
+  }
+}
+
+function renderDetection() {
+  det.rv.textContent = D.rho_grid[det.rhoIndex].toFixed(2);
+  det.panels.innerHTML = "";
+  detectionPanel(det.panels, "top");
+  detectionPanel(det.panels, "bottom");
+  if (det.progress >= 1 || !det.stripDrawn) { renderStrip(); det.stripDrawn = true; }
+}
+
+/* ------------------------------------------------------ 2 · calibration */
+const cal = { condition: "fog", seed: String(D.display_seed), refs: false };
+(function buildCalibration() {
+  const s = sections.calib;
+  el("p", { class: "lead", text: "A calibrated model is right 70% of the time when it says 70%. Points on the diagonal are perfect; below it means overconfident." }, s);
+  const c = el("div", { class: "controls" }, s);
+  el("label", { text: "Condition" }, c).appendChild(select(D.conditions, cal.condition, v => { cal.condition = v; renderCalibration(); }, pretty));
+  el("label", { text: "Seed" }, c).appendChild(select(D.seeds.map(String), cal.seed, v => { cal.seed = v; renderCalibration(); }));
+  const ref = el("label", { text: "Show K > 2 references" }, c);
+  const cb = el("input", { type: "checkbox" }, ref); cb.addEventListener("change", () => { cal.refs = cb.checked; renderCalibration(); });
+  cal.grid = el("div", { class: "grid4" }, s);
+  cal.bottom = el("div", { class: "two", style: "margin-top:14px" }, s);
+  el("p", { class: "note", text: "15 equal-mass bins, so every point holds the same number of images. The bars average the three seeds; dots are single seeds." }, s);
+})();
+
+function reliability(parent, name) {
+  const e = D.calibration[name][cal.condition][cal.seed];
+  const card = el("div", { class: "card" + (name === "QUTE" ? " hl" : "") }, parent);
+  const head = el("div", { class: "panel-head", style: "flex-direction:column;gap:2px" }, card);
+  el("h3", { text: name }, head);
+  el("div", { class: "stats", html: `<span>ECE <b>${fmt(e.ece)}</b></span><span>Acc <b>${pct(e.accuracy)}</b></span>` }, head);
+  const S = 320, m = 34, inner = S - m - 10;
+  const svg = el("svg", { viewBox: `0 0 ${S} ${S}` }, card);
+  const sx = v => m + v * inner, sy = v => 10 + (1 - v) * inner;
+  const ax = el("g", { class: "axis" }, svg);
+  for (const t of [0, 0.5, 1]) {
+    el("line", { x1: sx(0), x2: sx(1), y1: sy(t), y2: sy(t), stroke: "var(--grid)" }, ax);
+    el("text", { x: m - 6, y: sy(t) + 4, "text-anchor": "end", text: t }, ax);
+    el("text", { x: sx(t), y: S - 6, "text-anchor": "middle", text: t }, ax);
+  }
+  el("line", { x1: sx(0), y1: sy(0), x2: sx(1), y2: sy(1), stroke: "#9aa0aa", "stroke-dasharray": "5 5" }, svg);
+  const color = name === "QUTE" ? "var(--accent)" : "var(--ink)";
+  e.reliability.forEach(([conf, acc]) => el("line", { x1: sx(conf), x2: sx(conf), y1: sy(conf), y2: sy(acc), stroke: "var(--event)", "stroke-width": 5 }, svg));
+  el("polyline", { points: e.reliability.map(([c, a]) => `${sx(c)},${sy(a)}`).join(" "), fill: "none", stroke: color, "stroke-width": 2 }, svg);
+  e.reliability.forEach(([conf, acc], k) => {
+    const dot = el("circle", { cx: sx(conf), cy: sy(acc), r: 5, fill: color, stroke: "var(--card)", "stroke-width": 2 }, svg);
+    dot.addEventListener("mousemove", ev => showTip(ev, `Bin ${k + 1}: says ${pct(conf)}, right ${pct(acc)}`));
+    dot.addEventListener("mouseleave", hideTip);
+  });
+}
+
+function eceBars(parent) {
+  const card = el("div", { class: "card" }, parent);
+  el("div", { class: "panel-head", html: `<h3>ECE on ${pretty(cal.condition)}, lower is better</h3>` }, card);
+  const names = D.methods.concat(cal.refs ? D.references : []);
+  const rows = names.map(n => ({ n, v: D.seeds.map(sd => D.calibration[n][cal.condition][String(sd)].ece) })).map(r => ({ ...r, m: mean(r.v) }));
+  const max = Math.max(...rows.flatMap(r => r.v)) * 1.1 || 1;
+  const rowH = 38, W = 620, L = 170, H = rows.length * rowH + 24;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, card);
+  const x = v => L + (v / max) * (W - L - 60);
+  rows.forEach((r, k) => {
+    const yy = k * rowH + 6;
+    el("text", { x: L - 10, y: yy + 19, "text-anchor": "end", fill: "var(--ink)", "font-size": 15, text: r.n }, svg);
+    el("rect", { x: L, y: yy + 6, width: Math.max(2, x(r.m) - L), height: 20, rx: 4, fill: r.n === "QUTE" ? "var(--accent)" : "#B8BEC8" }, svg);
+    el("text", { x: x(Math.max(r.m, ...r.v)) + 10, y: yy + 21, fill: "var(--ink)", "font-size": 14, text: fmt(r.m) }, svg);
+    r.v.forEach((v, j) => {
+      const d = el("circle", { cx: x(v), cy: yy + 16, r: 4, fill: `var(--seed${D.seeds[j]})`, stroke: "#fff", "stroke-width": 1.5 }, svg);
+      d.addEventListener("mousemove", ev => showTip(ev, `${r.n}, seed ${D.seeds[j]}: ${fmt(v)}`)); d.addEventListener("mouseleave", hideTip);
+    });
+  });
+  el("div", { class: "legend", html: D.seeds.map(sd => `<span><i class="sw box" style="background:var(--seed${sd});width:10px;height:10px;border-radius:50%"></i>seed ${sd}</span>`).join("") }, card);
+}
+
+function confidenceHist(parent) {
+  const card = el("div", { class: "card" }, parent);
+  el("div", { class: "panel-head", html: `<h3>How confident when right vs wrong (seed ${cal.seed})</h3>` }, card);
+  const legend = el("div", { class: "legend", html: '<span><i class="sw box" style="background:#B8BEC8"></i>Correct</span><span><i class="sw box" style="background:#e34948"></i>Wrong</span>' }, card);
+  for (const name of ["BASE", "QUTE"]) {
+    const e = D.calibration[name][cal.condition][cal.seed];
+    const W = 560, H = 120, L = 70;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H + 18}` }, card);
+    el("text", { x: 0, y: 20, fill: "var(--ink)", "font-size": 15, "font-weight": 600, text: name }, svg);
+    const tot = e.hist_correct.reduce((a, b) => a + b, 0) + e.hist_wrong.reduce((a, b) => a + b, 0);
+    const max = Math.max(...e.hist_correct, ...e.hist_wrong) / tot || 1;
+    const bw = (W - L) / 20;
+    e.hist_correct.forEach((c, k) => {
+      const w = e.hist_wrong[k];
+      const hc = (c / tot) / max * (H - 10), hw = (w / tot) / max * (H - 10);
+      el("rect", { x: L + k * bw + 1, y: H - hc, width: bw / 2 - 1, height: hc, fill: "#B8BEC8", rx: 2 }, svg);
+      el("rect", { x: L + k * bw + bw / 2, y: H - hw, width: bw / 2 - 1, height: hw, fill: "#e34948", rx: 2 }, svg);
+      const hitbox = el("rect", { x: L + k * bw, y: 0, width: bw, height: H, fill: "transparent" }, svg);
+      hitbox.addEventListener("mousemove", ev => showTip(ev, `${name}, confidence ${(k / 20).toFixed(2)}–${((k + 1) / 20).toFixed(2)}<br>Correct ${c}, wrong ${w}`));
+      hitbox.addEventListener("mouseleave", hideTip);
+    });
+    el("line", { x1: L, x2: W, y1: H, y2: H, stroke: "#9aa0aa" }, svg);
+    for (const t of [0, 0.5, 1]) el("text", { class: "axis", x: L + t * (W - L), y: H + 16, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12, text: t }, svg);
+  }
+}
+
+function renderCalibration() {
+  cal.grid.innerHTML = ""; cal.bottom.innerHTML = "";
+  ["BASE", "MC Dropout (2)", "Deep ensemble (2)", "QUTE"].forEach(n => reliability(cal.grid, n));
+  eceBars(cal.bottom);
+  confidenceHist(cal.bottom);
+}
+
+/* --------------------------------------------------------- 3 · ablation */
+const abl = { metric: "ece" };
+(function buildAblation() {
+  const s = sections.ablate;
+  el("p", { class: "lead", text: "Same architecture, with and without weight transfer. Right of zero means transfer helped on that corruption; each dot is one seed." }, s);
+  const c = el("div", { class: "controls" }, s);
+  el("label", { text: "Metric" }, c).appendChild(select(["ece", "ap"], abl.metric, v => { abl.metric = v; renderAblation(); },
+    v => v === "ece" ? "ECE (calibration)" : "AP (detection)"));
+  abl.card = el("div", { class: "card" }, s);
+  abl.table = el("details", {}, s);
+})();
+
+function ablationRows() {
+  const names = abl.metric === "ece" ? D.conditions : D.corruptions;
+  return names.map(c => {
+    const v = D.seeds.map(sd => {
+      const sk = String(sd);
+      if (abl.metric === "ece") return D.calibration["QUTE, no transfer"][c][sk].ece - D.calibration["QUTE"][c][sk].ece;
+      const a = D.detection_ap["QUTE"][c][sk], b = D.detection_ap["QUTE, no transfer"][c][sk];
+      return a == null || b == null ? null : a - b;
+    });
+    const valid = v.filter(x => x != null);
+    const consistent = valid.length === D.seeds.length && (valid.every(x => x > 0) || valid.every(x => x < 0));
+    return { c, v, m: mean(v), consistent };
+  }).sort((a, b) => (b.m ?? -9) - (a.m ?? -9));
+}
+
+function renderAblation() {
+  const rows = ablationRows();
+  abl.card.innerHTML = "";
+  const helps = rows.filter(r => r.consistent && r.m > 0).map(r => pretty(r.c));
+  const hurts = rows.filter(r => r.consistent && r.m < 0).map(r => pretty(r.c));
+  el("div", { class: "panel-head", html: `<h3>${abl.metric === "ece" ? "ECE(no transfer) − ECE(QUTE)" : "AP(QUTE) − AP(no transfer)"}</h3>` +
+    `<div class="stats"><span>Helps on every seed: <b>${helps.join(", ") || "none"}</b></span><span>Hurts on every seed: <b>${hurts.join(", ") || "none"}</b></span></div>` }, abl.card);
+  el("div", { class: "legend", html: D.seeds.map(sd => `<span><i class="sw box" style="background:var(--seed${sd});width:12px;height:12px;border-radius:50%"></i>seed ${sd}</span>`).join("") +
+    '<span><i class="sw box" style="background:var(--accent-bg)"></i>Same direction on all seeds</span>' }, abl.card);
+  const all = rows.flatMap(r => r.v).filter(v => v != null);
+  const ext = Math.max(0.01, ...all.map(Math.abs)) * 1.1;
+  const rowH = 32, W = 1400, L = 190, R = 30, T = 26, H = T + rows.length * rowH + 26;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, abl.card);
+  const x = v => L + (v + ext) / (2 * ext) * (W - L - R);
+  const ry = k => T + k * rowH;
+  rows.forEach((r, k) => { if (r.consistent) el("rect", { x: 0, y: ry(k) + 2, width: W, height: rowH - 4, fill: "var(--accent-bg)", rx: 6 }, svg); });
+  for (const t of [-ext, -ext / 2, 0, ext / 2, ext]) {
+    el("line", { x1: x(t), x2: x(t), y1: T, y2: H - 22, stroke: t === 0 ? "#6B7280" : "var(--grid)", "stroke-width": t === 0 ? 1.5 : 1 }, svg);
+    el("text", { x: x(t), y: H - 4, "text-anchor": "middle", fill: "var(--muted)", "font-size": 13, text: (t > 0 ? "+" : "") + t.toFixed(3) }, svg);
+  }
+  el("text", { x: x(0) + 10, y: 16, fill: "var(--ink)", "font-size": 14, "font-weight": 600, text: "transfer helps →" }, svg);
+  el("text", { x: x(0) - 10, y: 16, "text-anchor": "end", fill: "var(--ink)", "font-size": 14, "font-weight": 600, text: "← transfer hurts" }, svg);
+  rows.forEach((r, k) => {
+    const yy = ry(k);
+    el("text", { x: L - 14, y: yy + rowH / 2 + 5, "text-anchor": "end", fill: "var(--ink)", "font-size": 15, "font-weight": r.consistent ? 700 : 400, text: pretty(r.c) }, svg);
+    const vals = r.v.filter(v => v != null);
+    if (vals.length > 1) el("line", { x1: x(Math.min(...vals)), x2: x(Math.max(...vals)), y1: yy + rowH / 2, y2: yy + rowH / 2, stroke: "#C9CDD4", "stroke-width": 2 }, svg);
+    r.v.forEach((v, j) => {
+      if (v == null) return;
+      const d = el("circle", { cx: x(v), cy: yy + rowH / 2, r: 7, fill: `var(--seed${D.seeds[j]})`, stroke: "#fff", "stroke-width": 2 }, svg);
+      d.addEventListener("mousemove", ev => showTip(ev, `${pretty(r.c)}, seed ${D.seeds[j]}: ${(v > 0 ? "+" : "") + v.toFixed(4)}`)); d.addEventListener("mouseleave", hideTip);
+    });
+  });
+  abl.table.innerHTML = "<summary>Table view</summary>";
+  const t = el("table", { class: "data" }, abl.table);
+  el("tr", { html: "<th>Condition</th>" + D.seeds.map(sd => `<th>Seed ${sd}</th>`).join("") + "<th>Mean</th>" }, t);
+  rows.forEach(r => el("tr", { html: `<td>${pretty(r.c)}</td>` + r.v.map(v => `<td>${v == null ? "—" : v.toFixed(4)}</td>`).join("") + `<td>${r.m == null ? "—" : r.m.toFixed(4)}</td>` }, t));
+}
+
+renderDetection(); renderCalibration(); renderAblation(); openTab("detect");
+</script>
+</body>
+</html>
